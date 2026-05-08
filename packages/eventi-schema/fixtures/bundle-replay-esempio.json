@@ -1,0 +1,887 @@
+{
+  "schema_version": "1.0",
+  "partita": {
+    "id": "437bc126-1890-43b5-82c2-3ef289283da8",
+    "data_inizio": "2026-05-08T21:00:00+00:00",
+    "data_fine": null,
+    "luogo": "Il Gufo \u00b7 Roma",
+    "note": "Partita di esempio per fixture replay BC"
+  },
+  "giocatori": [
+    {
+      "id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+      "nome": "Edoardo",
+      "colore": "rosso",
+      "ordine_seduta": 1
+    },
+    {
+      "id": "ec33b08d-7297-48da-a609-f3969502c03f",
+      "nome": "Marco",
+      "colore": "blu",
+      "ordine_seduta": 2
+    },
+    {
+      "id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+      "nome": "Alice",
+      "colore": "verde",
+      "ordine_seduta": 3
+    }
+  ],
+  "eventi": [
+    {
+      "id": "f7e8d842-f7e6-439f-98c9-66b1f3362e65",
+      "ts_evento": "2026-05-08T21:00:00+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "venezuela",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "4b8bb506-a8d4-456f-a6e1-50f63f2e7bf5",
+      "ts_evento": "2026-05-08T21:00:00.001000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "medio_oriente",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "f3b060c7-79e2-467b-9627-73719345d532",
+      "ts_evento": "2026-05-08T21:00:00.002000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "nuova_guinea",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "38c70ac8-0fbf-4e8b-8142-cc05f67d0bdd",
+      "ts_evento": "2026-05-08T21:00:00.003000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "cita",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "0a903ca0-48bd-42ce-a533-67a94d38f5e8",
+      "ts_evento": "2026-05-08T21:00:00.004000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "urali",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "8d66e5b7-b3ea-4911-a319-2a6f00ccc9be",
+      "ts_evento": "2026-05-08T21:00:00.005000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "africa_meridionale",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "135baf29-3b57-46ff-b3e6-525ce7875b92",
+      "ts_evento": "2026-05-08T21:00:00.006000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "kamchatka",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "bbec62d9-32e1-4c5b-b711-7337ed3b2f6c",
+      "ts_evento": "2026-05-08T21:00:00.007000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "africa_settentrionale",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "7392066c-fadf-4a45-b83a-68688c536e1f",
+      "ts_evento": "2026-05-08T21:00:00.008000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "siberia",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "3e01a6f6-46d3-452e-a53e-e48e9f1258aa",
+      "ts_evento": "2026-05-08T21:00:00.009000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "australia_orientale",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "7f0117e7-a0da-421c-8ffd-95568a1f7761",
+      "ts_evento": "2026-05-08T21:00:00.010000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "alaska",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "9b3f530a-d471-4c32-9ff2-76f2b7efe40b",
+      "ts_evento": "2026-05-08T21:00:00.011000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "quebec",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "cf5b4e02-a89a-4a35-a50c-e5cfabfb7218",
+      "ts_evento": "2026-05-08T21:00:00.012000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "gran_bretagna",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "0dbd0e2b-c115-4226-aafd-e581cb8166a8",
+      "ts_evento": "2026-05-08T21:00:00.013000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "territori_nordovest",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "d1b6e610-2913-4b7a-874a-8640080cedd7",
+      "ts_evento": "2026-05-08T21:00:00.014000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "alberta",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "6b85777c-2ed9-46ca-802c-1821cbb6b08c",
+      "ts_evento": "2026-05-08T21:00:00.015000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "giappone",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "4685c58b-4db2-45dc-867f-e356f4250768",
+      "ts_evento": "2026-05-08T21:00:00.016000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "madagascar",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "49d07f05-2b3f-4e9d-801e-078ddf52c3c2",
+      "ts_evento": "2026-05-08T21:00:00.017000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "africa_orientale",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "c55710e0-91e0-4ec7-bbed-1ce51bab50e4",
+      "ts_evento": "2026-05-08T21:00:00.018000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "egitto",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "88e792c0-1dab-483c-8180-5e37216e022b",
+      "ts_evento": "2026-05-08T21:00:00.019000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "cina",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "2e98f200-cfab-4918-8d48-7000c98d3246",
+      "ts_evento": "2026-05-08T21:00:00.020000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "islanda",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "514e1598-331d-48a7-b8e0-0a38318d0a95",
+      "ts_evento": "2026-05-08T21:00:00.021000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "india",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "b963a2de-0891-4fda-98a0-5d5e9a8617de",
+      "ts_evento": "2026-05-08T21:00:00.022000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "europa_meridionale",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "2160b44d-b97f-4575-ad4a-9bdb3bfd402e",
+      "ts_evento": "2026-05-08T21:00:00.023000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "mongolia",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "0c2e799d-dbac-4439-acaf-a6f1f130d591",
+      "ts_evento": "2026-05-08T21:00:00.024000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "groenlandia",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "ddf13403-d20b-4e9a-adf2-d7207ec0e23c",
+      "ts_evento": "2026-05-08T21:00:00.025000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "stati_occidentali",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "12a92dbe-c12f-41f5-9b1c-615c4cd098a0",
+      "ts_evento": "2026-05-08T21:00:00.026000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "europa_settentrionale",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "b8b6124e-31df-459d-abad-10d8f9aafe87",
+      "ts_evento": "2026-05-08T21:00:00.027000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "stati_orientali",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "6ea22f1e-f3bf-4f2d-b17d-82e3608d012b",
+      "ts_evento": "2026-05-08T21:00:00.028000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "peru",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "b3702d25-30e8-442e-874a-39b28c7aeec3",
+      "ts_evento": "2026-05-08T21:00:00.029000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "europa_occidentale",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "e094f878-ce8b-4328-be8b-f8c10f35dc18",
+      "ts_evento": "2026-05-08T21:00:00.030000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "ontario",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "3e4739d7-1591-444f-a114-fc9222ed117c",
+      "ts_evento": "2026-05-08T21:00:00.031000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "brasile",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "bbe8e9bf-535c-4063-85dc-f0d954a13a7c",
+      "ts_evento": "2026-05-08T21:00:00.032000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "argentina",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "937c44ff-7e0a-463a-854c-2f00225c4a0c",
+      "ts_evento": "2026-05-08T21:00:00.033000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "asia_sudorientale",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "9596d74c-680f-4972-96dc-39551445b022",
+      "ts_evento": "2026-05-08T21:00:00.034000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "congo",
+        "n_armate": 3
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "17be74c5-8587-463a-8211-b348e32ab3f7",
+      "ts_evento": "2026-05-08T21:00:00.035000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "indonesia",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "fdcfe3f5-3c61-4d7b-8271-13aa4e414084",
+      "ts_evento": "2026-05-08T21:00:00.036000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "scandinavia",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "e540f406-a550-4085-824f-93cb0d3cbcf7",
+      "ts_evento": "2026-05-08T21:00:00.037000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "jacuzia",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "5a79c2a0-641b-4192-8ebd-6f36be0921c8",
+      "ts_evento": "2026-05-08T21:00:00.038000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "afghanistan",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "18b4b8d1-0b01-40f7-87e2-370dd326a254",
+      "ts_evento": "2026-05-08T21:00:00.039000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "america_centrale",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "50f62b3e-f4e5-4ed0-a6aa-c87422a2fac4",
+      "ts_evento": "2026-05-08T21:00:00.040000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "ucraina",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "c8ecf0c7-5da2-45a4-ba7d-78b0ecd9300b",
+      "ts_evento": "2026-05-08T21:00:00.041000+00:00",
+      "tipo": "territorio_assegnato_inizio",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "australia_occidentale",
+        "n_armate": 2
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "c90df805-93d3-4e60-a33d-61a373f7e375",
+      "ts_evento": "2026-05-08T21:00:00.042000+00:00",
+      "tipo": "obiettivo_assegnato",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "obiettivo_id": 15
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "ad920b0c-f082-4fa7-9d7c-7cdb04c75f86",
+      "ts_evento": "2026-05-08T21:00:00.043000+00:00",
+      "tipo": "obiettivo_assegnato",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "obiettivo_id": 13
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "496f174e-61f0-40ad-8913-221797c40304",
+      "ts_evento": "2026-05-08T21:00:00.044000+00:00",
+      "tipo": "obiettivo_assegnato",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "obiettivo_id": 7
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "3b5922f8-a0c2-4f4c-bbc9-7a3d695cccb0",
+      "ts_evento": "2026-05-08T21:00:00.045000+00:00",
+      "tipo": "partita_inizio",
+      "dati": {
+        "primo_giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370"
+      },
+      "validato_da": "setup_automatico",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "7dd5ef0c-050d-4c6c-85b2-8cb0b32fa00e",
+      "ts_evento": "2026-05-08T21:02:00+00:00",
+      "tipo": "turno_iniziato",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370"
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "4faff4c4-2f2b-4f54-8f92-da5ac1e9d025",
+      "ts_evento": "2026-05-08T21:02:05+00:00",
+      "tipo": "armate_piazzate",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "gran_bretagna",
+        "n": 3
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "31066a31-fa36-41c5-9b2c-42bd3c5770c4",
+      "ts_evento": "2026-05-08T21:02:15+00:00",
+      "tipo": "attacco_risolto",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "da": "nuova_guinea",
+        "a": "indonesia",
+        "dadi_attaccante": [
+          1,
+          1,
+          1
+        ],
+        "dadi_difensore": [
+          2,
+          2
+        ]
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "a7f7df42-4706-49bf-84a7-952413034f5a",
+      "ts_evento": "2026-05-08T21:02:30+00:00",
+      "tipo": "turno_finito",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370"
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "0840c41a-2a56-44a7-a8e5-6579c74c41ef",
+      "ts_evento": "2026-05-08T21:02:40+00:00",
+      "tipo": "turno_iniziato",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f"
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "4a70edf3-5342-4517-8ecd-b36f2146a1c9",
+      "ts_evento": "2026-05-08T21:02:45+00:00",
+      "tipo": "armate_piazzate",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "alberta",
+        "n": 3
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "fbb83dc9-c01b-402f-a58d-d0441bf9fde9",
+      "ts_evento": "2026-05-08T21:02:55+00:00",
+      "tipo": "attacco_risolto",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "da": "stati_orientali",
+        "a": "quebec",
+        "dadi_attaccante": [
+          3,
+          3,
+          2
+        ],
+        "dadi_difensore": [
+          3,
+          2
+        ]
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "f6cb2dc8-e21b-459e-9533-c9f2b22ed733",
+      "ts_evento": "2026-05-08T21:03:10+00:00",
+      "tipo": "turno_finito",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f"
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "a86ddfb0-cf7f-4c6e-84c4-8d7c44508e3c",
+      "ts_evento": "2026-05-08T21:03:20+00:00",
+      "tipo": "turno_iniziato",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d"
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "7d1ac9ec-6694-4cde-b20a-3e2f99adf35c",
+      "ts_evento": "2026-05-08T21:03:25+00:00",
+      "tipo": "armate_piazzate",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "ontario",
+        "n": 3
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "63329641-155d-4095-841d-44b970f295a3",
+      "ts_evento": "2026-05-08T21:03:35+00:00",
+      "tipo": "attacco_risolto",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "da": "europa_occidentale",
+        "a": "gran_bretagna",
+        "dadi_attaccante": [
+          6,
+          5,
+          3
+        ],
+        "dadi_difensore": [
+          5,
+          3
+        ]
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "1cf4f542-c421-4268-897d-46f048bbcd2f",
+      "ts_evento": "2026-05-08T21:03:50+00:00",
+      "tipo": "territorio_conquistato",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d",
+        "territorio": "gran_bretagna"
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "8530ca6d-1238-46cc-92ef-f0062598df38",
+      "ts_evento": "2026-05-08T21:03:52+00:00",
+      "tipo": "turno_finito",
+      "dati": {
+        "giocatore_id": "3f62aee8-b9b1-4072-91fe-3b479f89903d"
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "28701ba5-5c05-443f-be4c-113b81e3cd2a",
+      "ts_evento": "2026-05-08T21:04:02+00:00",
+      "tipo": "turno_iniziato",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370"
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "c65ca5fd-92b3-44c4-afa4-04a1501951a7",
+      "ts_evento": "2026-05-08T21:04:07+00:00",
+      "tipo": "armate_piazzate",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "territorio": "nuova_guinea",
+        "n": 3
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "74d0fa41-e7e5-4266-bdfc-090f2294e8af",
+      "ts_evento": "2026-05-08T21:04:17+00:00",
+      "tipo": "attacco_risolto",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370",
+        "da": "australia_orientale",
+        "a": "australia_occidentale",
+        "dadi_attaccante": [
+          6,
+          3,
+          2
+        ],
+        "dadi_difensore": [
+          3,
+          3
+        ]
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "639cb2a1-76e7-432c-aa19-449915c84115",
+      "ts_evento": "2026-05-08T21:04:32+00:00",
+      "tipo": "turno_finito",
+      "dati": {
+        "giocatore_id": "85d827a6-a4cf-4655-969e-2e8c1f576370"
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "2c251715-b20e-400a-87ce-7376ac15c05e",
+      "ts_evento": "2026-05-08T21:04:42+00:00",
+      "tipo": "turno_iniziato",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f"
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "030d79b2-2fb8-473c-88f0-8d5bcda18ff3",
+      "ts_evento": "2026-05-08T21:04:47+00:00",
+      "tipo": "armate_piazzate",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "mongolia",
+        "n": 3
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "be1933b7-a1cb-4ffb-ba68-377050ea547f",
+      "ts_evento": "2026-05-08T21:04:57+00:00",
+      "tipo": "attacco_risolto",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "da": "stati_occidentali",
+        "a": "america_centrale",
+        "dadi_attaccante": [
+          6,
+          3,
+          1
+        ],
+        "dadi_difensore": [
+          2,
+          1
+        ]
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "f1432be2-1da8-4ea5-94e9-13f5a853f2f8",
+      "ts_evento": "2026-05-08T21:05:12+00:00",
+      "tipo": "territorio_conquistato",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "territorio": "america_centrale"
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "72bc0241-d0e1-4929-9724-af7d17f97f97",
+      "ts_evento": "2026-05-08T21:05:14+00:00",
+      "tipo": "attacco_risolto",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f",
+        "da": "africa_orientale",
+        "a": "congo",
+        "dadi_attaccante": [
+          6,
+          2,
+          2
+        ],
+        "dadi_difensore": [
+          5,
+          5
+        ]
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    },
+    {
+      "id": "32c77414-32c6-4e32-88e4-d2281a934fec",
+      "ts_evento": "2026-05-08T21:05:29+00:00",
+      "tipo": "turno_finito",
+      "dati": {
+        "giocatore_id": "ec33b08d-7297-48da-a609-f3969502c03f"
+      },
+      "validato_da": "esempio",
+      "partita_id": "437bc126-1890-43b5-82c2-3ef289283da8"
+    }
+  ]
+}

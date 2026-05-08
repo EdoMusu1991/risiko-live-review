@@ -63,7 +63,7 @@ accetta), `ricostruzione_servizio` (wrap risiko_engine),
 `statistiche_partita_servizio`, `validazione_coerenza_servizio`,
 `esportazione_servizio`, `video_servizio`.
 
-**186 test verdi**, ruff + mypy strict puliti, deploy Railway pronto
+**190 test verdi**, ruff + mypy strict puliti, deploy Railway pronto
 (Dockerfile multi-stage + entrypoint Alembic). Vedi `backend/README.md`.
 
 ### `frontend/` — React app
@@ -96,14 +96,22 @@ uploader/storageLocale stubbati), `SchermataSetup` completata.
 Mancano 3 schermate + navigazione root. Build iOS richiede Mac
 (in cloud o fisico). Vedi `mobile/README.md`.
 
+### `packages/eventi-schema/` — Schema Zod condiviso
+Schema TS dei 12 tipi di evento (discriminated union) + bundle replay,
+verificato via round-trip Python→JSON→zod. Consumato dal frontend RL
+(via `file:` dependency) e da Battle Commander (per il modulo replay).
+29 test verdi. Vedi `packages/README.md`.
+
 ## Stato componenti
 
 | Componente | Stato | Test |
 |---|---|---|
-| Backend pipeline import→aggregazione→accetta→ricostruzione | ✅ completo | 186 |
+| Backend pipeline import→aggregazione→accetta→ricostruzione | ✅ completo | 190 |
 | Backend statistiche aggregate (attacco + difesa via motore) | ✅ completo | (incl.) |
 | Backend validatore coerenza eventi pre-ricostruzione | ✅ completo | (incl.) |
+| Backend export bundle replay per Battle Commander | ✅ completo | (incl.) |
 | Frontend pannello validazione | ✅ completo | typecheck OK |
+| Pacchetto `@risiko/eventi-schema` (zod) | ✅ completo | 29 |
 | Backend deploy Railway-ready | ✅ Dockerfile + Alembic | — |
 | Frontend review eventi + plancia + esportazione | ✅ completo | typecheck OK |
 | Frontend modale accetta proposta BLE | ✅ completo | — |

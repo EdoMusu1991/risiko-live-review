@@ -79,3 +79,46 @@ import funzioni. Lanciare con `python verifica_e2e.py`.
 
 A differenza del seed, questo va attraverso l'API HTTP, quindi il
 backend deve essere già attivo su `localhost:8000`.
+
+## genera_bundle_esempio.py
+
+Genera un bundle replay (JSON conforme a `@risiko/eventi-schema`
+`BundleReplay`) usabile come fixture per test:
+
+- Test di Battle Commander quando integra il modulo replay
+- Test del frontend RL quando avrà il visore replay
+- Smoke test del contratto cross-system
+
+### Uso
+
+```bash
+# Default output: ./bundle-replay-esempio.json
+python scripts/genera_bundle_esempio.py
+
+# Output custom (es. aggiornare fixture del pacchetto zod)
+python scripts/genera_bundle_esempio.py \
+  ../packages/eventi-schema/fixtures/bundle-replay-esempio.json
+```
+
+Lo script costruisce un DB SQLite in-memory dedicato (non tocca quello
+configurato), simula una partita 3 giocatori con setup automatico + 5
+turni con rinforzi/attacchi/conquiste, ed esporta il bundle. Output
+deterministico (seed RNG = 42).
+
+Output di esempio (variabile per stati casuali):
+
+```
+Bundle scritto: bundle-replay-esempio.json
+  schema_version: 1.0
+  giocatori: 3
+  eventi: 69
+  per tipo:
+    armate_piazzate: 5
+    attacco_risolto: 6
+    obiettivo_assegnato: 3
+    partita_inizio: 1
+    territorio_assegnato_inizio: 42
+    territorio_conquistato: 2
+    turno_finito: 5
+    turno_iniziato: 5
+```

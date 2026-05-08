@@ -125,6 +125,37 @@ export interface EventoValidato {
   data_creazione: string;
 }
 
+// === Tipi tipizzati derivati dallo schema zod condiviso ===
+//
+// Per nuove feature che vogliono narrowing TS automatico sul payload
+// `dati` di ogni evento, importare questi al posto di `EventoValidato`
+// (che ha `dati: Record<string, unknown>`).
+//
+// Esempio: nel visore replay, switch su `ev.tipo === "attacco_risolto"`
+// fa narrowing su `ev.dati.dadi_attaccante: number[]`.
+//
+// Source of truth: `packages/eventi-schema/src/`. Il backend Pydantic
+// è la SSOT semantica; lo schema zod è la traduzione TS verificata via
+// test di round-trip.
+export type {
+  BundleReplay,
+  DatiArmatePiazzate,
+  DatiArmateSpostate,
+  DatiAttaccoRisolto,
+  DatiCarta,
+  DatiCartaPescata,
+  DatiObiettivoAssegnato,
+  DatiPartitaFine,
+  DatiPartitaInizio,
+  DatiTerritorioAssegnatoInizio,
+  DatiTerritorioConquistato,
+  DatiTrisGiocato,
+  DatiTurnoFinito,
+  DatiTurnoIniziato,
+  EventoValidato as EventoValidatoTipato,
+  GiocatorePartita as GiocatorePartitaSchema,
+} from "@risiko/eventi-schema";
+
 export interface EventoValidatoCreazione {
   ts_evento: string;
   tipo: TipoEvento;
