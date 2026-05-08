@@ -14,6 +14,8 @@ calcolato al momento dell'esportazione tramite il motore regole.
 
 from __future__ import annotations
 
+import csv
+import io
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from html import escape
@@ -152,6 +154,95 @@ class ServizioEsportazione:
         }
 
     @staticmethod
+    def serializza_csv(dati: DatiEsportazione) -> str:
+        """
+        Produce un dump CSV degli eventi validati per analytics esterne
+        (Excel, Google Sheets, pandas, ecc.).
+
+        Schema colonne (fissa, una riga per evento):
+        - posizione: 1-based index cronologico
+        - ts_evento: ISO 8601 con offset UTC se naive
+        - tipo: tipo evento
+        - giocatore_id: UUID del giocatore (se presente nei dati)
+        - giocatore_nome: nome risolto via lookup (se trovato)
+        - territorio_da: territorio sorgente (attacco/spostamento)
+        - territorio_a: territorio bersaglio (attacco/spostamento)
+        - n_armate: per ARMATE_PIAZZATE/ARMATE_SPOSTATE
+        - dadi_attaccante: pipe-separated (es "6|4|2"), per ATTACCO_RISOLTO
+        - dadi_difensore: pipe-separated, per ATTACCO_RISOLTO
+        - dati_extra: JSON dei campi `dati` non già esposti come colonna
+
+        Formato: RFC 4180-compliant, encoding UTF-8 con BOM (per Excel
+        che altrimenti interpreta i caratteri italiani in Latin-1).
+        """
+        nomi_per_id = {str(g.id): g.nome for g in dati.partita.giocatori}
+
+        buffer = io.StringIO()
+        # Excel ha bisogno del BOM UTF-8 per riconoscere accenti italiani
+        buffer.write("\ufeff")
+        writer = csv.writer(buffer, lineterminator="\n", quoting=csv.QUOTE_MINIMAL)
+
+        writer.writerow([
+            "posizione",
+            "ts_evento",
+            "tipo",
+            "giocatore_id",
+            "giocatore_nome",
+            "territorio_da",
+            "territorio_a",
+            "n_armate",
+            "dadi_attaccante",
+            "dadi_difensore",
+            "dati_extra",
+        ])
+
+        # Campi che diventano colonne dedicate (escludiamoli da dati_extra)
+        campi_in_colonne = {
+            "giocatore_id", "da", "a", "territorio", "n",
+            "dadi_attaccante", "dadi_difensore",
+        }
+
+        for i, ev in enumerate(dati.eventi, start=1):
+            d = ev.get("dati") or {}
+            if not isinstance(d, dict):
+                d = {}
+
+            gid = d.get("giocatore_id") or ""
+            nome = nomi_per_id.get(str(gid), "") if gid else ""
+
+            # Territorio: ARMATE_PIAZZATE usa "territorio", ATTACCO/SPOSTAMENTO usa "da"/"a"
+            terr_da = d.get("da") or d.get("territorio") or ""
+            terr_a = d.get("a") or ""
+
+            n_armate = d.get("n", "")
+
+            dadi_att = _formatta_dadi_csv(d.get("dadi_attaccante"))
+            dadi_dif = _formatta_dadi_csv(d.get("dadi_difensore"))
+
+            # Dati extra: tutto ciò che non è già in colonne
+            extra = {k: v for k, v in d.items() if k not in campi_in_colonne}
+            extra_json = ""
+            if extra:
+                import json as _json
+                extra_json = _json.dumps(extra, ensure_ascii=False, default=str)
+
+            writer.writerow([
+                i,
+                ev.get("ts_evento", ""),
+                ev.get("tipo", ""),
+                gid,
+                nome,
+                terr_da,
+                terr_a,
+                n_armate,
+                dadi_att,
+                dadi_dif,
+                extra_json,
+            ])
+
+        return buffer.getvalue()
+
+    @staticmethod
     def serializza_bundle_replay(dati: DatiEsportazione) -> dict[str, Any]:
         """
         Produce un bundle conforme allo schema `@risiko/eventi-schema`
@@ -277,6 +368,13 @@ _HEX_COLORI: dict[str, str] = {
     "nero": "#1a1614",
     "viola": "#5e2d56",
 }
+
+
+def _formatta_dadi_csv(v: object) -> str:
+    """Formatta una lista di dadi come stringa pipe-separated (es '6|4|2')."""
+    if not isinstance(v, list):
+        return ""
+    return "|".join(str(d) for d in v if isinstance(d, int))
 
 
 def _ts_aware_iso(ts_iso: str) -> str:

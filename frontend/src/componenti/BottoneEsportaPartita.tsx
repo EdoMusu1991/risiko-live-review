@@ -1,16 +1,18 @@
 /**
- * Bottone "Esporta" con dropdown a due opzioni: JSON e HTML.
+ * Bottone "Esporta" con dropdown a tre opzioni: JSON, HTML, CSV.
  *
  * - JSON: scarica un file `.json` strutturato (per archivio digitale).
  * - HTML: apre un nuovo tab con il report stampabile A4 (per archivio
  *   cartaceo del club).
+ * - CSV: scarica un file piatto degli eventi per analytics esterne
+ *   (Excel, Google Sheets, pandas).
  *
- * Entrambe le opzioni puntano a URL del backend; il browser gestisce
- * il download/apertura nativamente.
+ * Tutte le opzioni puntano a URL del backend; il browser gestisce il
+ * download/apertura nativamente.
  */
 
 import { useEffect, useRef, useState } from "react";
-import { Download, FileJson, Printer } from "lucide-react";
+import { Download, FileJson, FileSpreadsheet, Printer } from "lucide-react";
 
 import { apiEsportazione } from "@/api";
 
@@ -48,14 +50,17 @@ export function BottoneEsportaPartita({ partitaId }: ProprietaBottoneEsporta) {
   }, [aperto]);
 
   function scaricaJson() {
-    // Forza download navigando al URL (Content-Disposition: attachment)
     window.location.href = apiEsportazione.urlJson(partitaId);
     setAperto(false);
   }
 
   function apriHtml() {
-    // Apre in nuova scheda per la stampa
     window.open(apiEsportazione.urlHtml(partitaId), "_blank", "noopener");
+    setAperto(false);
+  }
+
+  function scaricaCsv() {
+    window.location.href = apiEsportazione.urlCsv(partitaId);
     setAperto(false);
   }
 
@@ -74,7 +79,7 @@ export function BottoneEsportaPartita({ partitaId }: ProprietaBottoneEsporta) {
       {aperto ? (
         <div
           role="menu"
-          className="absolute right-0 top-full mt-1 z-20 min-w-[200px] bg-pergamena border border-inchiostro/25 shadow-cartaHover"
+          className="absolute right-0 top-full mt-1 z-20 min-w-[220px] bg-pergamena border border-inchiostro/25 shadow-cartaHover"
         >
           <VoceMenu
             onClick={scaricaJson}
@@ -88,6 +93,13 @@ export function BottoneEsportaPartita({ partitaId }: ProprietaBottoneEsporta) {
             icona={<Printer size={14} />}
             titolo="Esporta HTML"
             descrizione="Report stampabile A4 (apre in nuova scheda)"
+          />
+          <div className="linea-divisoria" />
+          <VoceMenu
+            onClick={scaricaCsv}
+            icona={<FileSpreadsheet size={14} />}
+            titolo="Esporta CSV"
+            descrizione="Eventi piatti per Excel/Sheets/analytics"
           />
         </div>
       ) : null}

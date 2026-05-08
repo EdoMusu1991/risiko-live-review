@@ -16,4 +16,21 @@ export const apiEsportazione = {
   urlHtml(partitaId: string): string {
     return `/api/partite/${partitaId}/esporta?formato=html`;
   },
+
+  /**
+   * URL del CSV piatto degli eventi. Usato per analytics esterne in
+   * Excel/Google Sheets/pandas. UTF-8 con BOM per gestire accenti
+   * italiani correttamente in Excel.
+   */
+  urlCsv(partitaId: string): string {
+    return `/api/partite/${partitaId}/esporta?formato=csv`;
+  },
+
+  /**
+   * URL del bundle replay conforme a `@risiko/eventi-schema`
+   * BundleReplay. Consumato da Battle Commander.
+   */
+  urlReplay(partitaId: string): string {
+    return `/api/partite/${partitaId}/esporta?formato=replay`;
+  },
 };

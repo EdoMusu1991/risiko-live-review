@@ -9,7 +9,7 @@ Due formati supportati via query param `formato`:
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.configurazione import get_sessione_db
@@ -27,18 +27,19 @@ router = APIRouter(prefix="/partite", tags=["esportazione"])
 )
 async def esporta_partita(
     partita_id: str,
-    formato: Literal["json", "html", "replay"] = Query(
+    formato: Literal["json", "html", "replay", "csv"] = Query(
         default="json",
         description=(
             "Formato di esportazione:\n"
             "- 'json': bundle strutturato con eventi + stato finale\n"
             "- 'html': report stampabile A4 autocontenuto\n"
             "- 'replay': bundle conforme a @risiko/eventi-schema "
-            "BundleReplay, consumabile da Battle Commander per il replay"
+            "BundleReplay, consumabile da Battle Commander per il replay\n"
+            "- 'csv': dump piatto degli eventi per analytics in Excel/Sheets"
         ),
     ),
     db: AsyncSession = Depends(get_sessione_db),
-) -> JSONResponse | HTMLResponse:
+) -> JSONResponse | HTMLResponse | PlainTextResponse:
     """
     Esporta una partita in formato strutturato (JSON), stampabile (HTML),
     o replay-bundle per Battle Commander.
@@ -76,6 +77,17 @@ async def esporta_partita(
         nome_file = f"risiko-replay-{partita_id[:8]}.json"
         return JSONResponse(
             content=bundle,
+            headers={
+                "Content-Disposition": f'attachment; filename="{nome_file}"',
+            },
+        )
+
+    if formato == "csv":
+        contenuto = ServizioEsportazione.serializza_csv(dati)
+        nome_file = f"risiko-eventi-{partita_id[:8]}.csv"
+        return PlainTextResponse(
+            content=contenuto,
+            media_type="text/csv; charset=utf-8",
             headers={
                 "Content-Disposition": f'attachment; filename="{nome_file}"',
             },

@@ -605,3 +605,88 @@ async def test_batch_validati_vuoto_rifiutato(client_test: AsyncClient) -> None:
         json={"eventi": []},
     )
     assert risposta.status_code == 422
+
+
+# === Test elimina batch eventi grezzi ===
+
+
+@pytest.mark.asyncio
+async def test_elimina_batch_lista_vuota(client_test: AsyncClient) -> None:
+    """Lista vuota: 0 eliminati, niente errore."""
+    p_id = await _crea_partita_e_ottieni_id(client_test)
+
+    risposta = await client_test.post(
+        f"/api/partite/{p_id}/eventi-grezzi/elimina-batch",
+        json={"evento_ids": []},
+    )
+    assert risposta.status_code == 200
+    assert risposta.json() == {"n_eliminati": 0}
+
+
+@pytest.mark.asyncio
+async def test_elimina_batch_alcuni_id_inesistenti(
+    client_test: AsyncClient,
+) -> None:
+    """ID inesistenti vengono ignorati silenziosamente."""
+    p_id = await _crea_partita_e_ottieni_id(client_test)
+
+    # Creo 2 eventi grezzi, ne cancello batch con 1 esistente + 1 finto
+    grezzi_creati = []
+    for i in range(2):
+        r = await client_test.post(
+            f"/api/partite/{p_id}/eventi-grezzi",
+            json={
+                "ts_evento": f"2026-05-08T21:0{i}:00+00:00",
+                "tipo": "dadi_lanciati",
+                "fonte": "dado_ble",
+                "dati": {"face": i + 1},
+            },
+        )
+        assert r.status_code == 201
+        grezzi_creati.append(r.json()["id"])
+
+    risposta = await client_test.post(
+        f"/api/partite/{p_id}/eventi-grezzi/elimina-batch",
+        json={
+            "evento_ids": [grezzi_creati[0], "00000000-0000-0000-0000-000000000000"]
+        },
+    )
+    assert risposta.status_code == 200
+    assert risposta.json() == {"n_eliminati": 1}
+
+    # L'altro evento non è stato toccato
+    lista = await client_test.get(f"/api/partite/{p_id}/eventi-grezzi")
+    ids_rimasti = {e["id"] for e in lista.json()}
+    assert grezzi_creati[1] in ids_rimasti
+    assert grezzi_creati[0] not in ids_rimasti
+
+
+@pytest.mark.asyncio
+async def test_elimina_batch_richiede_lista(
+    client_test: AsyncClient,
+) -> None:
+    """Body senza evento_ids o non-lista: 400."""
+    p_id = await _crea_partita_e_ottieni_id(client_test)
+
+    risposta = await client_test.post(
+        f"/api/partite/{p_id}/eventi-grezzi/elimina-batch",
+        json={"evento_ids": "non-una-lista"},
+    )
+    assert risposta.status_code == 400
+
+
+async def _crea_partita_e_ottieni_id(client: AsyncClient) -> str:
+    """Helper: crea partita 2-giocatori, ritorna id."""
+    r = await client.post(
+        "/api/partite",
+        json={
+            "data_inizio": "2026-05-08T20:00:00+00:00",
+            "luogo": "Test batch",
+            "giocatori": [
+                {"nome": "A", "colore": "rosso", "ordine_seduta": 1},
+                {"nome": "B", "colore": "blu", "ordine_seduta": 2},
+            ],
+        },
+    )
+    assert r.status_code == 201
+    return r.json()["id"]

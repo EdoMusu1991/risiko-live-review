@@ -2,9 +2,11 @@
 Test endpoint di esportazione partita (JSON e HTML).
 """
 
+from datetime import UTC, datetime
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def _crea_partita_minima(client: AsyncClient) -> dict:
@@ -231,3 +233,110 @@ async def test_esporta_replay_filename_dedicato(
     cd = risposta.headers.get("content-disposition", "")
     assert "risiko-replay-" in cd
     assert ".json" in cd
+
+
+# === Test formato CSV (per analytics Excel/Sheets) ===
+
+
+@pytest.mark.asyncio
+async def test_esporta_csv_partita_vuota(client_test: AsyncClient) -> None:
+    """CSV di partita senza eventi: solo header riga + BOM."""
+    p = await _crea_partita_minima(client_test)
+
+    risposta = await client_test.get(
+        f"/api/partite/{p['id']}/esporta", params={"formato": "csv"}
+    )
+    assert risposta.status_code == 200
+    assert risposta.headers["content-type"].startswith("text/csv")
+    contenuto = risposta.text
+
+    # BOM UTF-8 per Excel
+    assert contenuto.startswith("\ufeff")
+
+    # Header presente
+    righe = contenuto.lstrip("\ufeff").strip().split("\n")
+    assert len(righe) == 1  # solo header
+    assert "posizione" in righe[0]
+    assert "tipo" in righe[0]
+    assert "dadi_attaccante" in righe[0]
+
+
+@pytest.mark.asyncio
+async def test_esporta_csv_dopo_setup(client_test: AsyncClient) -> None:
+    """CSV con setup automatico contiene 1 riga per evento."""
+    p = await _crea_partita_minima(client_test)
+    setup = await client_test.post(
+        f"/api/partite/{p['id']}/setup-automatico", params={"seed": 42}
+    )
+    assert setup.status_code == 201
+
+    risposta = await client_test.get(
+        f"/api/partite/{p['id']}/esporta", params={"formato": "csv"}
+    )
+    assert risposta.status_code == 200
+    contenuto = risposta.text.lstrip("\ufeff")
+    righe = [r for r in contenuto.split("\n") if r]
+    # Header + 46 eventi setup (42 territori + 3 obiettivi + 1 partita_inizio)
+    assert len(righe) == 47
+
+
+@pytest.mark.asyncio
+async def test_esporta_csv_attacco_serializza_dadi(
+    client_test: AsyncClient, sessione_test: AsyncSession
+) -> None:
+    """Per ATTACCO_RISOLTO i dadi sono pipe-separated."""
+    from app.modelli import EventoValidato, TipoEvento
+
+    p = await _crea_partita_minima(client_test)
+
+    # Aggiungo un attacco direttamente al DB (skippo flusso completo)
+    from sqlalchemy import select as _sel
+
+    from app.modelli import GiocatorePartita as Giocatore
+
+    res_g = await sessione_test.execute(
+        _sel(Giocatore).where(Giocatore.partita_id == p["id"]).order_by(Giocatore.ordine_seduta)
+    )
+    g = next(iter(res_g.scalars()))
+
+    sessione_test.add(
+        EventoValidato(
+            partita_id=p["id"],
+            ts_evento=datetime(2026, 5, 8, 21, 30, tzinfo=UTC),
+            tipo=TipoEvento.ATTACCO_RISOLTO,
+            dati={
+                "giocatore_id": g.id,
+                "da": "kamchatka",
+                "a": "alaska",
+                "dadi_attaccante": [6, 4, 2],
+                "dadi_difensore": [5, 3],
+            },
+            evento_grezzo_id=None,
+            validato_da="test",
+        )
+    )
+    await sessione_test.commit()
+
+    risposta = await client_test.get(
+        f"/api/partite/{p['id']}/esporta", params={"formato": "csv"}
+    )
+    contenuto = risposta.text
+    # Cerca la riga con i dadi
+    assert "6|4|2" in contenuto
+    assert "5|3" in contenuto
+    # Nome del giocatore risolto
+    assert g.nome in contenuto
+
+
+@pytest.mark.asyncio
+async def test_esporta_csv_filename_dedicato(
+    client_test: AsyncClient,
+) -> None:
+    p = await _crea_partita_minima(client_test)
+
+    risposta = await client_test.get(
+        f"/api/partite/{p['id']}/esporta", params={"formato": "csv"}
+    )
+    cd = risposta.headers.get("content-disposition", "")
+    assert "risiko-eventi-" in cd
+    assert ".csv" in cd

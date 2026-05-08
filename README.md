@@ -64,7 +64,7 @@ accetta), `ricostruzione_servizio` (wrap risiko_engine),
 `classifica_club_servizio` (aggregazione cross-partita),
 `esportazione_servizio`, `video_servizio`.
 
-**202 test verdi**, ruff + mypy strict puliti, deploy Railway pronto
+**209 test verdi**, ruff + mypy strict puliti, deploy Railway pronto
 (Dockerfile multi-stage + entrypoint Alembic). Vedi `backend/README.md`.
 
 ### `frontend/` — React app
@@ -107,13 +107,16 @@ verificato via round-trip Python→JSON→zod. Consumato dal frontend RL
 
 | Componente | Stato | Test |
 |---|---|---|
-| Backend pipeline import→aggregazione→accetta→ricostruzione | ✅ completo | 202 |
+| Backend pipeline import→aggregazione→accetta→ricostruzione | ✅ completo | 209 |
 | Backend statistiche aggregate (attacco + difesa via motore) | ✅ completo | (incl.) |
 | Backend validatore coerenza eventi pre-ricostruzione | ✅ completo | (incl.) |
 | Backend export bundle replay per Battle Commander | ✅ completo | (incl.) |
 | Backend classifica club cross-partita | ✅ completo | (incl.) |
+| Backend export CSV per analytics esterne | ✅ completo | (incl.) |
+| Backend elimina eventi grezzi batch atomico | ✅ completo | (incl.) |
 | Frontend pannello validazione | ✅ completo | typecheck OK |
 | Frontend pagina classifica club | ✅ completo | typecheck OK |
+| Frontend rifiuta proposte batch + "rifiuta tutte" | ✅ completo | typecheck OK |
 | Pacchetto `@risiko/eventi-schema` (zod) | ✅ completo | 29 |
 | Backend deploy Railway-ready | ✅ Dockerfile + Alembic | — |
 | Frontend review eventi + plancia + esportazione | ✅ completo | typecheck OK |

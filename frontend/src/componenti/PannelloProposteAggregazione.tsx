@@ -80,12 +80,9 @@ export function PannelloProposteAggregazione({
       return;
     }
     try {
-      // Elimina tutti gli eventi grezzi del cluster
-      await Promise.all(
-        proposta.eventi_grezzi_id.map((id) =>
-          apiEventi.eliminaGrezzo(partitaId, id),
-        ),
-      );
+      // Elimina tutti gli eventi grezzi del cluster in una sola
+      // chiamata atomica (un round-trip invece di N).
+      await apiEventi.eliminaGrezziBatch(partitaId, proposta.eventi_grezzi_id);
       // Ricarica le proposte rimanenti e notifica il padre
       await richiedi();
       onEventiCambiati?.();
@@ -94,6 +91,34 @@ export function PannelloProposteAggregazione({
         e instanceof ErroreApi
           ? e.dettaglio
           : "Errore durante l'eliminazione degli eventi grezzi";
+      setErrore(messaggio);
+    }
+  }
+
+  /**
+   * Elimina TUTTI gli eventi grezzi di TUTTE le proposte in un colpo
+   * solo. Utile quando l'utente decide che i dadi BLE sono compromessi
+   * e vuole ricominciare la review manuale degli attacchi da zero.
+   */
+  async function rifiutaTutte() {
+    if (!risultato || risultato.proposte.length === 0) return;
+    const tuttiIds = risultato.proposte.flatMap((p) => p.eventi_grezzi_id);
+    if (
+      !window.confirm(
+        `Eliminare TUTTE le ${risultato.proposte.length} proposte (${tuttiIds.length} eventi grezzi)? Non potranno essere recuperati.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      await apiEventi.eliminaGrezziBatch(partitaId, tuttiIds);
+      await richiedi();
+      onEventiCambiati?.();
+    } catch (e) {
+      const messaggio =
+        e instanceof ErroreApi
+          ? e.dettaglio
+          : "Errore durante l'eliminazione batch";
       setErrore(messaggio);
     }
   }
@@ -151,16 +176,28 @@ export function PannelloProposteAggregazione({
 
       {/* Riepilogo */}
       {risultato && (
-        <div className="px-4 py-2 bg-pergamena/50 border-b border-inchiostro/10 text-xs text-inchiostro-tenue">
-          {risultato.n_eventi_grezzi_analizzati === 0 ? (
-            <>Nessun evento BLE non validato da raggruppare.</>
-          ) : (
-            <>
-              Analizzati <strong>{risultato.n_eventi_grezzi_analizzati}</strong>{" "}
-              eventi BLE → <strong>{risultato.n_proposte}</strong> proposte
-              generate.
-            </>
-          )}
+        <div className="px-4 py-2 bg-pergamena/50 border-b border-inchiostro/10 text-xs text-inchiostro-tenue flex items-center justify-between gap-3">
+          <div>
+            {risultato.n_eventi_grezzi_analizzati === 0 ? (
+              <>Nessun evento BLE non validato da raggruppare.</>
+            ) : (
+              <>
+                Analizzati <strong>{risultato.n_eventi_grezzi_analizzati}</strong>{" "}
+                eventi BLE → <strong>{risultato.n_proposte}</strong> proposte
+                generate.
+              </>
+            )}
+          </div>
+          {risultato.proposte.length > 1 ? (
+            <button
+              type="button"
+              onClick={rifiutaTutte}
+              className="text-xs text-scarlatto hover:text-scarlatto-scuro underline-offset-2 hover:underline transition"
+              title="Elimina TUTTE le proposte in un colpo solo (utile se i dadi BLE sono compromessi)"
+            >
+              Rifiuta tutte ({risultato.proposte.length})
+            </button>
+          ) : null}
         </div>
       )}
 

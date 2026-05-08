@@ -295,6 +295,34 @@ class ServizioEventiGrezzi:
         await db.commit()
 
     @staticmethod
+    async def elimina_batch(
+        db: AsyncSession,
+        partita_id: str,
+        evento_ids: list[str],
+    ) -> int:
+        """
+        Elimina N eventi grezzi atomicamente. Restituisce il numero
+        effettivamente cancellati (alcuni IDs potrebbero non esistere
+        o appartenere ad altre partite — sono ignorati silenziosamente).
+
+        Atomico: o tutti gli ID validi vengono cancellati o nessuno
+        (single transaction).
+        """
+        if not evento_ids:
+            return 0
+
+        stmt = select(EventoGrezzo).where(
+            EventoGrezzo.partita_id == partita_id,
+            EventoGrezzo.id.in_(evento_ids),
+        )
+        risultato = await db.execute(stmt)
+        eventi = list(risultato.scalars())
+        for ev in eventi:
+            await db.delete(ev)
+        await db.commit()
+        return len(eventi)
+
+    @staticmethod
     async def aggiorna(
         db: AsyncSession,
         partita_id: str,

@@ -5,6 +5,8 @@ Gli eventi sono sempre legati a una partita: tutti gli endpoint sono
 nested sotto `/partite/{partita_id}/eventi-...`.
 """
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -160,6 +162,43 @@ async def elimina_evento_grezzo(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
         ) from e
+
+
+@router.post(
+    "/eventi-grezzi/elimina-batch",
+    summary="Elimina più eventi grezzi atomicamente",
+)
+async def elimina_eventi_grezzi_batch(
+    partita_id: str,
+    body: dict[str, Any],
+    db: AsyncSession = Depends(get_sessione_db),
+) -> dict[str, int]:
+    """
+    Elimina N eventi grezzi in un'unica transazione.
+
+    Body: `{"evento_ids": ["uuid1", "uuid2", ...]}`. ID che non esistono
+    o non appartengono alla partita sono ignorati silenziosamente.
+
+    Risposta: `{"n_eliminati": <int>}`. Utile per il flusso "rifiuta
+    proposta" dove l'utente scarta tutti gli eventi BLE di un cluster
+    in un colpo solo invece di N round-trip.
+    """
+    evento_ids = body.get("evento_ids", [])
+    if not isinstance(evento_ids, list):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Campo 'evento_ids' deve essere una lista di stringhe",
+        )
+    if not all(isinstance(i, str) for i in evento_ids):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ogni elemento di 'evento_ids' deve essere una stringa",
+        )
+
+    n_eliminati = await ServizioEventiGrezzi.elimina_batch(
+        db, partita_id, evento_ids
+    )
+    return {"n_eliminati": n_eliminati}
 
 
 # === Eventi validati ===

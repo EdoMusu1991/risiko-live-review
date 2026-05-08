@@ -70,6 +70,27 @@ export const apiEventi = {
     );
   },
 
+  /**
+   * Elimina N eventi grezzi atomicamente. Usato dal flusso "rifiuta
+   * proposta" per scartare tutti i dadi BLE di un cluster in un colpo
+   * solo invece di N delete sequenziali.
+   *
+   * Ritorna il numero effettivamente cancellati (può essere < di
+   * `eventoIds.length` se alcuni ID non esistevano).
+   */
+  async eliminaGrezziBatch(
+    partitaId: string,
+    eventoIds: string[],
+  ): Promise<number> {
+    const risultato = await chiamaApi(
+      cliente.post<{ n_eliminati: number }>(
+        `/partite/${partitaId}/eventi-grezzi/elimina-batch`,
+        { evento_ids: eventoIds },
+      ),
+    );
+    return risultato.n_eliminati;
+  },
+
   // === Eventi validati ===
 
   async listaValidati(partitaId: string): Promise<EventoValidato[]> {
