@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.configurazione import Base, engine, impostazioni
 from app.routers import (
     aggregazione,
+    classifica_club,
     esportazione,
     eventi,
     import_bundle,
@@ -86,6 +87,7 @@ app.include_router(import_bundle.router, prefix=impostazioni.api_prefix)
 app.include_router(aggregazione.router, prefix=impostazioni.api_prefix)
 app.include_router(statistiche.router, prefix=impostazioni.api_prefix)
 app.include_router(validazione.router, prefix=impostazioni.api_prefix)
+app.include_router(classifica_club.router, prefix=impostazioni.api_prefix)
 
 
 @app.get("/", tags=["root"])

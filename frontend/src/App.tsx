@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { Layout } from "@/componenti/Layout";
+import { PaginaClassificaClub } from "@/pagine/PaginaClassificaClub";
 import { PaginaDettaglioPartita } from "@/pagine/PaginaDettaglioPartita";
 import { PaginaListaPartite } from "@/pagine/PaginaListaPartite";
 import { PaginaNuovaPartita } from "@/pagine/PaginaNuovaPartita";
@@ -16,6 +17,7 @@ export function App() {
             path="/partite/:partitaId"
             element={<PaginaDettaglioPartita />}
           />
+          <Route path="/club" element={<PaginaClassificaClub />} />
           <Route path="*" element={<PaginaNonTrovata />} />
         </Route>
       </Routes>

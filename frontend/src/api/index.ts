@@ -26,6 +26,11 @@ export type {
   RisultatoValidazioneCoerenza,
   SeveritaProblema,
 } from "./validazione";
+export { apiClassificaClub, bilancioArmate } from "./classificaClub";
+export type {
+  ClassificaClub,
+  GiocatoreClub,
+} from "./classificaClub";
 export type { TerritorioInfo, ObiettivoInfo } from "./risorse";
 export type {
   SetupAutomaticoRichiesta,

@@ -54,16 +54,17 @@ Stack: Python 3.12, FastAPI, SQLAlchemy 2 async, Pydantic v2, Postgres
 
 **Routers**: `partite`, `eventi`, `video`, `ricostruzione`, `risorse`,
 `esportazione`, `import_bundle`, `aggregazione`, `statistiche`,
-`validazione`.
+`validazione`, `classifica_club`.
 
 **Servizi (logica pura/quasi-pura)**: `partita_servizio`,
 `setup_automatico_servizio` (genera 46 eventi setup),
 `import_bundle_servizio`, `aggregazione_dadi_servizio` (clustering +
 accetta), `ricostruzione_servizio` (wrap risiko_engine),
 `statistiche_partita_servizio`, `validazione_coerenza_servizio`,
+`classifica_club_servizio` (aggregazione cross-partita),
 `esportazione_servizio`, `video_servizio`.
 
-**190 test verdi**, ruff + mypy strict puliti, deploy Railway pronto
+**202 test verdi**, ruff + mypy strict puliti, deploy Railway pronto
 (Dockerfile multi-stage + entrypoint Alembic). Vedi `backend/README.md`.
 
 ### `frontend/` — React app
@@ -106,11 +107,13 @@ verificato via round-trip Python→JSON→zod. Consumato dal frontend RL
 
 | Componente | Stato | Test |
 |---|---|---|
-| Backend pipeline import→aggregazione→accetta→ricostruzione | ✅ completo | 190 |
+| Backend pipeline import→aggregazione→accetta→ricostruzione | ✅ completo | 202 |
 | Backend statistiche aggregate (attacco + difesa via motore) | ✅ completo | (incl.) |
 | Backend validatore coerenza eventi pre-ricostruzione | ✅ completo | (incl.) |
 | Backend export bundle replay per Battle Commander | ✅ completo | (incl.) |
+| Backend classifica club cross-partita | ✅ completo | (incl.) |
 | Frontend pannello validazione | ✅ completo | typecheck OK |
+| Frontend pagina classifica club | ✅ completo | typecheck OK |
 | Pacchetto `@risiko/eventi-schema` (zod) | ✅ completo | 29 |
 | Backend deploy Railway-ready | ✅ Dockerfile + Alembic | — |
 | Frontend review eventi + plancia + esportazione | ✅ completo | typecheck OK |
@@ -161,18 +164,23 @@ non risolve il bug tris.
 ## Quick start dev locale
 
 ```bash
-# Backend
-cd backend
+# 1. Pacchetto condiviso (richiesto prima del frontend)
+cd packages/eventi-schema
+npm install
+npm run build
+
+# 2. Backend
+cd ../../backend
 pip install -e .
 uvicorn app.main:app --reload  # http://localhost:8000
 
-# Frontend (altro terminale)
-cd frontend
+# 3. Frontend (altro terminale)
+cd ../frontend
 npm install
 npm run dev  # http://localhost:5173
 
-# Popola dati demo per testare il flusso UI senza app mobile
-cd backend
+# 4. (opzionale) Popola dati demo per testare il flusso UI senza app mobile
+cd ../backend
 python scripts/seed_demo_ble.py
 # → stampa l'URL della partita demo
 ```

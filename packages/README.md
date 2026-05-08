@@ -1,75 +1,131 @@
-# packages/
+# @risiko/eventi-schema
 
-Pacchetti TypeScript condivisi del progetto Risiko Live Review.
+Schema Zod condiviso degli eventi di partita Risiko classico EG. Pacchetto consumato da:
 
-## `eventi-schema/`
+- **Battle Commander** (modulo replay): valida eventi in arrivo da Risiko Live o da partite native BC esportate
+- **Risiko Live Review** (frontend): validazione type-safe degli eventi ricevuti dal backend FastAPI
 
-Schema Zod degli eventi di partita Risiko (12 tipi discriminated union +
-bundle replay). Source of truth lato TypeScript per il contratto
-backend↔frontend e per l'integrazione con Battle Commander.
+Source of truth: gli schemi Pydantic in `risiko-live-review/backend/app/schemi/dati_eventi.py`. Le costanti italiane sono mantenute identiche per garantire round-trip compatibility.
 
-**Consumatori**:
+## Installazione
 
-- **Frontend RL** (`../frontend`): importa via `file:` dependency. Tipi
-  TS narrowing-friendly disponibili in `src/tipi/dominio.ts` via
-  re-export (`EventoValidatoTipato`, `DatiAttaccoRisolto`, ecc.).
-- **Battle Commander** (esterno): riceve il pacchetto come zip, lo
-  installa nel suo monorepo o copia in `src/replay-lib/packages/`.
-
-**Source of truth semantica**: gli schemi Pydantic in
-`backend/app/schemi/dati_eventi.py`. Lo schema zod è una traduzione TS
-verificata via:
-
-- Test di round-trip end-to-end Python→JSON→zod nel test di
-  esportazione `formato=replay`
-- Fixture concreta `eventi-schema/fixtures/bundle-replay-esempio.json`
-  generata dal backend e validata dal test zod (regression test contro
-  drift di schema)
-
-## Workflow di sviluppo
+Pacchetto privato. Da git submodule, npm workspace, o copia diretta della cartella.
 
 ```bash
-# Build dei pacchetti (auto eseguito da npm install in frontend)
-cd packages/eventi-schema
-npm install
-npm run build
-
-# Test
-npm test
-
-# Aggiornare il fixture dal backend (dopo modifiche significative)
-cd ../../backend
-python scripts/genera_bundle_esempio.py \
-  ../packages/eventi-schema/fixtures/bundle-replay-esempio.json
-
-# Verificare che il fixture aggiornato resti valido lato zod
-cd ../packages/eventi-schema
-npm test
+npm install zod  # peer dependency
 ```
 
-## Esportare verso Battle Commander
+## Uso da Battle Commander (caso replay)
 
-Quando BC ha bisogno del pacchetto:
+```ts
+import {
+  SchemaBundleReplay,
+  parsaBundleReplay,
+  ErroreParsingEventi,
+  type EventoValidato,
+} from "@risiko/eventi-schema";
+
+// 1. BC riceve un JSON dall'utente (o da API Risiko Live)
+const jsonGrezzo = await fetch("/replay-bundle.json").then((r) => r.json());
+
+// 2. Validazione strutturata
+try {
+  const bundle = parsaBundleReplay(jsonGrezzo);
+  // bundle.giocatori, bundle.eventi sono ora type-safe
+  for (const ev of bundle.eventi) {
+    switch (ev.tipo) {
+      case "attacco_risolto":
+        // TS sa che ev.dati ha dadi_attaccante: number[]
+        animaAttacco(ev.dati);
+        break;
+      case "armate_piazzate":
+        animaPiazzamento(ev.dati);
+        break;
+      // ... discriminated union esaustiva
+    }
+  }
+} catch (e) {
+  if (e instanceof ErroreParsingEventi) {
+    // e.dettagli ha [{ percorso, messaggio, codice }, ...]
+    console.error("Bundle invalido:", e.dettagli);
+  }
+}
+```
+
+## Uso da Risiko Live frontend
+
+```ts
+import { SchemaEventoValidato } from "@risiko/eventi-schema";
+
+// Sostituisce i tipi TS scritti a mano in src/tipi/dominio.ts
+const eventi = await apiEventi.listaValidati(partitaId);
+const eventiValidati = eventi.map((e) => SchemaEventoValidato.parse(e));
+// → validazione runtime + tipi TS narrowing automatico
+```
+
+## Tipi evento coperti
+
+12 tipi di `EventoValidato` (più 5 schemi `Dati*` riutilizzati):
+
+| Tipo evento | Fase | Schema dati |
+|---|---|---|
+| `territorio_assegnato_inizio` | setup | `DatiTerritorioAssegnatoInizio` |
+| `obiettivo_assegnato` | setup | `DatiObiettivoAssegnato` |
+| `partita_inizio` | setup | `DatiPartitaInizio` |
+| `turno_iniziato` | turno | `DatiTurnoIniziato` * |
+| `armate_piazzate` | rinforzo | `DatiArmatePiazzate` |
+| `tris_giocato` | rinforzo | `DatiTrisGiocato` (3× `DatiCarta`) |
+| `attacco_risolto` | attacco | `DatiAttaccoRisolto` |
+| `territorio_conquistato` | attacco | `DatiTerritorioConquistato` * |
+| `armate_spostate` | spostamento | `DatiArmateSpostate` |
+| `carta_pescata` | fine turno | `DatiCartaPescata` * |
+| `turno_finito` | fine turno | `DatiTurnoFinito` |
+| `partita_fine` | fine | `DatiPartitaFine` |
+
+\* Questi 3 tipi non hanno schema Pydantic dedicato lato backend RL (sono o derivati automaticamente dal motore, o solo informativi). Lo schema Zod qui è basato sull'uso effettivo nel codebase. Se servirà ufficializzarli sarà semplice aggiungere lo schema Pydantic mirror lato backend.
+
+## Vincoli importanti
+
+- Tutti gli schemi `.strict()`: rifiutano campi extra. Specchio del `extra="forbid"` Pydantic.
+- `partita_id` opzionale negli eventi: in alcuni contesti (replay bundle) è dentro la partita stessa, non serve ripeterlo per evento.
+- `ts_evento` deve essere ISO 8601 con timezone offset (es. `2026-05-07T21:00:00+00:00` o `...Z`).
+- Dadi sempre `1..6`, `1..3` quantità. Carte sempre 3 nel tris.
+- Giocatori sempre 2-6 nel bundle replay.
+
+## Helper di parsing
+
+Tre livelli di tolleranza:
+
+```ts
+// Strict: lancia su errore (per fail-fast)
+const ev = parsaEvento(raw);
+
+// Safe: ritorna { success, valore | errore } (no throw)
+const r = parsaEventoSafe(raw);
+if (r.success) { ... } else { console.error(r.errore.dettagli); }
+
+// Tollerante per liste: separa validi da scartati con indici
+const { validi, scartati } = parsaListaEventi(rawArray);
+// scartati: [{ indice: number, errore: ErroreParsingEventi }, ...]
+```
+
+## Test
 
 ```bash
-cd packages/eventi-schema
-npm pack  # produce risiko-eventi-schema-0.1.0.tgz
+npm test           # vitest run
+npm run test:watch
+npm run typecheck
+npm run build      # tsc → dist/
 ```
 
-Oppure per uno zip umano-leggibile:
+28 test verdi. Coprono validazione di ogni schema dati, discriminated union narrowing, bundle replay, helper di parsing tollerante.
 
-```bash
-cd packages
-zip -r eventi-schema-v0.1.zip eventi-schema/ \
-  -x '*/node_modules/*' '*/dist/*'
-```
+## Roadmap
+
+- [ ] Tradurre `DatiCarta`, `DatiTrisGiocato` in BC (oggi probabilmente differente)
+- [ ] Ufficializzare schemi Pydantic per `TurnoIniziato`, `TerritorioConquistato`, `CartaPescata` lato backend RL (rimuovere asterischi)
+- [ ] Considerare submodule git o npm workspace dopo prima integrazione reale BC↔RL
 
 ## Versioning
 
-- `0.1.x` — breaking changes ammessi (pre-stabilizzazione)
-- `0.x.0` (prossimo: 0.2) — alla prima integrazione reale BC, congelo l'API
-- `1.0.0` — stable, semver pulito
-
-`schema_version` interno al `BundleReplay` (attualmente `1.0`) è separato
-dalla versione del pacchetto npm: cambia solo se cambia il formato del
-bundle scambiato fra BC e RL.
+`schema_version` esposto nel `BundleReplay` per evolvere il formato senza rompere bundle vecchi. Attualmente `1.0`. Una nuova major version richiederà adapter espliciti nel modulo replay BC.

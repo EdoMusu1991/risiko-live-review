@@ -46,6 +46,7 @@ function Header() {
         <nav className="flex items-center gap-1">
           <VoceMenu to="/">Partite</VoceMenu>
           <VoceMenu to="/partite/nuova">Nuova partita</VoceMenu>
+          <VoceMenu to="/club">Classifica club</VoceMenu>
         </nav>
       </div>
     </header>
