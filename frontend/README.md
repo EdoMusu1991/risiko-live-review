@@ -1,120 +1,116 @@
-# Risiko Live Review — Frontend
+# risiko-live (monorepo)
 
-Frontend React per la review e validazione di partite Risiko.
-
-## Requisiti
-
-- Node.js 20 o superiore
-- Backend FastAPI in esecuzione su `localhost:8000` (vedi `backend/`)
-
-## Setup rapido
-
-Su PowerShell Windows:
-
-```powershell
-cd frontend
-
-# Installa dipendenze
-npm install
-
-# Avvia il dev server (proxy automatico verso il backend)
-npm run dev
-```
-
-Il dev server gira su <http://localhost:5173>. Tutte le chiamate a `/api/*`
-vengono inoltrate al backend FastAPI tramite il proxy Vite (configurato in
-`vite.config.ts`).
-
-## Comandi
-
-```powershell
-npm run dev       # dev server con HMR
-npm run build     # type-check + build di produzione
-npm run lint      # solo type-check (alias di `tsc -b --noEmit`)
-npm run preview   # serve la build di produzione localmente
-```
-
-## Stack
-
-- **React 18** con StrictMode + TypeScript strict
-- **Vite 5** come bundler/dev server
-- **Tailwind CSS 3.4** con palette piatta personalizzata
-- **React Router DOM 6** per il routing client
-- **axios** per HTTP, con `ErroreApi` normalizzato
-- **date-fns** per formattazione date
-- **lucide-react** per le icone (no emoji)
+Monorepo che contiene Risiko Live Review (frontend) e i pacchetti
+condivisi del dominio Risiko classico EG (schema eventi, replay engine,
+mappa, viewer player).
 
 ## Struttura
 
 ```
-frontend/
-├── src/
-│   ├── main.tsx                   # entry point React
-│   ├── App.tsx                    # router top-level
-│   ├── api/                       # client HTTP per ogni dominio
-│   │   ├── cliente.ts             # axios + ErroreApi
-│   │   ├── partite.ts
-│   │   ├── eventi.ts
-│   │   ├── video.ts
-│   │   └── ricostruzione.ts
-│   ├── tipi/dominio.ts            # types speculari agli schemi Pydantic
-│   ├── hooks/useRichiestaApi.ts   # hook loading/error/data
-│   ├── componenti/
-│   │   ├── Layout.tsx             # header editoriale + footer
-│   │   ├── decorativi.tsx         # PallinoColore, BadgeStato, MessaggioErrore, StatoVuoto
-│   │   ├── PlayerVideo.tsx        # HTML5 video con HTTP Range + scrubber
-│   │   ├── PannelloUploadVideo.tsx
-│   │   ├── PannelloEventi.tsx     # tabs validati/grezzi sincronizzati al video
-│   │   └── PannelloStatoFinale.tsx
-│   ├── pagine/
-│   │   ├── PaginaListaPartite.tsx
-│   │   ├── PaginaNuovaPartita.tsx
-│   │   └── PaginaDettaglioPartita.tsx
-│   └── stili/globali.css          # Tailwind + classi custom (.btn-primario, .carta, ecc.)
-├── public/favicon.svg
-├── index.html                     # carica Fraunces, Inter Tight, JetBrains Mono da Google Fonts
-├── tailwind.config.js
-├── vite.config.ts                 # proxy /api → localhost:8000
-└── package.json
+risiko-live/
+├── packages/
+│   ├── eventi-schema/          Schema condiviso degli eventi (Zod)
+│   ├── replay-lib/             Replay engine (StatoPartita, Timeline)
+│   ├── map-classico/           Mappa SVG editoriale + dati strutturali
+│   └── replay-player/          Viewer "out of the box" (replay-lib + mappa)
+├── frontend/                   Risiko Live Review frontend (React + Vite)
+├── tsconfig.base.json
+├── package.json                npm workspaces
+└── README.md
 ```
 
-## Estetica
+## Dipendenze tra i pacchetti
 
-Direzione: **cartografia editoriale**.
+```
+                                      eventi-schema
+                                     /             \
+                                  replay-lib    map-classico
+                                     \             /
+                                      replay-player
+                                            |
+                                       frontend RL
+```
 
-Pensa a una vecchia mappa Risiko incorniciata in una rivista architettonica
-italiana. Pergamena calda, inchiostro scuro, accenti rosso scarlatto come
-unico colore dominante. Tipografia editoriale (Fraunces serif per i display,
-Inter Tight per il body, JetBrains Mono per i timestamp). Nessun rounded
-eccessivo, nessun gradiente viola. Bordi sottili come linee cartografiche.
+`eventi-schema` è il pacchetto fondamentale, source-of-truth per gli
+schemi Zod. Mirror del backend FastAPI/Pydantic.
 
-Palette principale:
-- `pergamena` `#f4ede0` — background
-- `inchiostro` `#1a1614` — testo
-- `scarlatto` `#b8332a` — unico accento
-- 6 colori giocatori Risiko
+## Setup
 
-## Convenzioni di codice
+```bash
+# dalla root del monorepo
+npm install      # installa tutti i workspace in un colpo solo
 
-- **Tutto in italiano**: variabili, componenti, file, props, eccezioni.
-  Coerente col backend.
-- **TypeScript strict**: `noUnusedLocals`, `noUnusedParameters`,
-  `noUncheckedIndexedAccess` tutti attivi.
-- **Componenti funzionali**: nessuna classe, hook quando serve stato.
-- **API tipata end-to-end**: i types in `src/tipi/dominio.ts` rispecchiano
-  gli schemi Pydantic. Quando il backend cambia, aggiornare a mano (in
-  futuro: generazione automatica da OpenAPI).
+# test e typecheck globali
+npm run test:run
+npm run typecheck
 
-## Roadmap immediata
+# o per pacchetto specifico
+cd packages/replay-lib && npm run test:run
+```
 
-- ✅ Lista partite, creazione, dettaglio (v0.4)
-- ✅ Player video con HTTP Range + scrubber custom
-- ✅ Pannello eventi con sync timeline → video
-- ✅ Visualizzazione stato finale ricostruito
-- ✅ Editor eventi interattivo: form dinamico per 9 tipi, modifica, elimina, shortcut "N" (v0.5)
-- ✅ Bottone setup automatico partita (genera 45 eventi con un click) (v0.6)
-- ✅ Plancia SVG schematica con territori, adiacenze e bonus continenti (v0.7)
-- ✅ Click-su-territorio per filtrare eventi sulla mappa (v0.8)
-- ⬜ Promozione grezzo → validato dalla UI
-- ⬜ Pannello statistiche partita (recharts)
-- ⬜ Shortcut tastiera J/K/L per scrubbing video
+## Frontend
+
+```bash
+cd frontend
+npm run dev      # localhost:5173, proxy /api → :8000 (FastAPI)
+npm run build    # tsc -b && vite build
+```
+
+Il frontend consuma 4 pacchetti workspace:
+- `@risiko/eventi-schema` per i tipi Zod (validation lato client)
+- `@risiko/map-classico` per la mappa (PlanciaMappa.tsx ne è un thin wrapper)
+- `@risiko/replay-lib` per il motore replay (transitivo via replay-player)
+- `@risiko/replay-player` per il viewer completo
+
+Il `RisikoReplayPlayer` è integrato in `PaginaDettaglioPartita.tsx` come
+nuova sezione, sotto lo stato finale ricostruito. Si attiva quando la
+ricostruzione ha prodotto un `stato_finale` (= la partita è almeno
+parzialmente ricostruibile).
+
+## Pacchetti
+
+| Nome | Versione | Test | Descrizione |
+|---|---|---|---|
+| `@risiko/eventi-schema` | 0.1.0 | 28 | Zod schemas, fonte unica per il dominio eventi |
+| `@risiko/replay-lib` | 0.1.0 | 50 | StatoPartita, Timeline, importatori, adapter BC |
+| `@risiko/map-classico` | 0.1.0 | 11 | Mappa SVG + dati strutturali (42 territori) |
+| `@risiko/replay-player` | 0.1.0 | 6 | Wrapper RisikoReplayPlayer + narrative |
+
+Totale 95 test verdi. Typecheck stretto pulito.
+
+## Integrazione esterna (Battle Commander)
+
+Battle Commander (repo separato) consumerà gli stessi pacchetti via:
+
+- **Git submodule** del monorepo, importando `risiko-live/packages/`, oppure
+- **npm registry privato** quando i pacchetti saranno pubblicati
+
+Per ora BC usa una copia vendored di `@risiko/replay-lib` (sessione
+precedente). Sostituibile con un import workspace al prossimo refactor.
+
+## Workspaces e versioning
+
+I pacchetti sono `private: true` e usano `"*"` come version specifier
+nelle dipendenze incrociate. npm workspaces risolve i link interni
+automaticamente.
+
+Per pubblicare su npm: rimuovere `private: true`, aggiungere `"build": "tsc"`,
+generare `dist/` e cambiare `main`/`types`/`exports` per puntare al build.
+Il setup attuale è source-only (no build step) per lo sviluppo veloce
+intra-monorepo.
+
+## Stack frontend
+
+- React 18 + Vite 5 + TypeScript 5.5
+- Tailwind 3
+- @tanstack/react-query 5
+- React Router 6
+- date-fns 4
+- lucide-react
+
+## Stack pacchetti
+
+- TypeScript 5.6
+- Zod 3
+- Vitest 2
+- React 18 (peer dependency dei pacchetti UI: map-classico, replay-lib/react, replay-player)

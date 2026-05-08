@@ -66,3 +66,7 @@ coverage/
 # DOCKER
 # =========================
 docker-data/
+
+backend/.venv/
+
+__pycache__/

@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === Variabili runtime accessibili anche via CSS puro === */
+:root {
+  --pergamena: #f4ede0;
+  --pergamena-scura: #ebe1cd;
+  --inchiostro: #1a1614;
+  --inchiostro-tenue: #5c5147;
+  --scarlatto: #b8332a;
+  --linea: rgba(26, 22, 20, 0.12);
+
+  /* InterTight è il font "InterTight" via Google Fonts (alias). */
+  font-family:
+    "Inter Tight", "InterTight", ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
+}
+
+@layer base {
+  body {
+    @apply bg-pergamena text-inchiostro antialiased min-h-screen;
+    /* Texture grain sottile, applicata come overlay sul background per
+       dare l'impressione di carta. */
+    background-image:
+      radial-gradient(
+        circle at 50% 0%,
+        rgba(184, 51, 42, 0.02) 0%,
+        transparent 60%
+      ),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    background-attachment: fixed;
+  }
+
+  /* Selezione testo coerente con il tema */
+  ::selection {
+    background-color: rgba(184, 51, 42, 0.18);
+    color: var(--inchiostro);
+  }
+
+  /* Scrollbar discreta (Webkit) */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(26, 22, 20, 0.2);
+    border-radius: 0;
+    border: 2px solid var(--pergamena);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(26, 22, 20, 0.35);
+  }
+
+  /* Default heading: Fraunces, tracking stretto */
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-crisp;
+  }
+}
+
+@layer components {
+  /* === Pulsante primario: rettangolare, severo, minimal === */
+  .btn-primario {
+    @apply inline-flex items-center gap-2 px-4 py-2.5
+           font-sans uppercase tracking-widest text-xs font-semibold
+           bg-inchiostro text-pergamena
+           border border-inchiostro
+           transition-all duration-150
+           hover:bg-pergamena hover:text-inchiostro
+           focus:outline-none focus:ring-2 focus:ring-scarlatto focus:ring-offset-2 focus:ring-offset-pergamena
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondario {
+    @apply inline-flex items-center gap-2 px-4 py-2.5
+           font-sans uppercase tracking-widest text-xs font-semibold
+           bg-transparent text-inchiostro
+           border border-inchiostro/40
+           transition-all duration-150
+           hover:border-inchiostro hover:bg-inchiostro/5
+           focus:outline-none focus:ring-2 focus:ring-scarlatto focus:ring-offset-2 focus:ring-offset-pergamena
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-pericolo {
+    @apply inline-flex items-center gap-2 px-4 py-2.5
+           font-sans uppercase tracking-widest text-xs font-semibold
+           bg-transparent text-scarlatto
+           border border-scarlatto/50
+           transition-all duration-150
+           hover:bg-scarlatto hover:text-pergamena
+           focus:outline-none focus:ring-2 focus:ring-scarlatto focus:ring-offset-2 focus:ring-offset-pergamena
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  /* === Card "foglio di carta" === */
+  .carta {
+    @apply bg-pergamena-chiara border border-inchiostro/10 shadow-carta
+           transition-shadow duration-200;
+  }
+  .carta-interattiva {
+    @apply carta hover:shadow-cartaHover hover:border-inchiostro/30
+           cursor-pointer;
+  }
+
+  /* === Etichetta cartografica (tipo "AFRICA SETTENTRIONALE" sulla mappa) === */
+  .etichetta {
+    @apply font-sans uppercase tracking-widest text-xs text-inchiostro-tenue;
+  }
+  .etichetta-rossa {
+    @apply etichetta text-scarlatto;
+  }
+
+  /* === Linea decorativa, cartografica === */
+  .linea-divisoria {
+    @apply h-px bg-inchiostro/15;
+  }
+
+  /* === Input field === */
+  .campo-testo {
+    @apply w-full px-3 py-2 bg-pergamena-chiara
+           border border-inchiostro/20
+           font-sans text-inchiostro placeholder:text-inchiostro-fioco
+           transition-colors duration-150
+           focus:outline-none focus:border-scarlatto;
+  }
+
+  /* === Pallino colore giocatore === */
+  .pallino-colore {
+    @apply inline-block w-3 h-3 rounded-full border border-inchiostro/30 align-middle;
+  }
+}
+
+@layer utilities {
+  /* Numeri tabulari per timestamps e conteggi */
+  .num-tab {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  /* Linea decorativa cartografica */
+  .bordo-cartografico {
+    border-image: linear-gradient(
+        to right,
+        transparent,
+        rgba(26, 22, 20, 0.4),
+        transparent
+      )
+      1;
+  }
+}
