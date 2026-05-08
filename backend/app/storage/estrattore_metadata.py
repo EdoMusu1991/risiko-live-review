@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import subprocess
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -116,26 +117,32 @@ class EstrattoreFfprobe(EstrattoreMetadataVideo):
             str(percorso_file),
         ]
 
+        # NOTA: usiamo subprocess sincrono in un thread (asyncio.to_thread)
+        # invece di asyncio.create_subprocess_exec. Su Windows uvicorn in
+        # modalità --reload imposta WindowsSelectorEventLoopPolicy che NON
+        # supporta create_subprocess_exec (NotImplementedError). Il pattern
+        # to_thread + subprocess.run è cross-platform e non blocca l'event
+        # loop perché gira fuori dal thread principale.
         try:
-            processo = await asyncio.create_subprocess_exec(
-                *argomenti,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+            risultato = await asyncio.to_thread(
+                subprocess.run,
+                argomenti,
+                capture_output=True,
+                check=False,
             )
-            stdout, stderr = await processo.communicate()
         except FileNotFoundError as e:
             raise FfprobeNonDisponibileError(
                 f"Comando '{self._comando}' non trovato. Installa FFmpeg."
             ) from e
 
-        if processo.returncode != 0:
+        if risultato.returncode != 0:
             raise VideoCorrottoError(
                 f"ffprobe ha rifiutato il file {percorso_file.name}: "
-                f"{stderr.decode('utf-8', errors='replace')}"
+                f"{risultato.stderr.decode('utf-8', errors='replace')}"
             )
 
         try:
-            dati = json.loads(stdout.decode("utf-8"))
+            dati = json.loads(risultato.stdout.decode("utf-8"))
         except json.JSONDecodeError as e:
             raise EstrazioneMetadataError(
                 f"Output ffprobe non parsabile: {e}"
