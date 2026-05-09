@@ -15,7 +15,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
-import { ArrowLeft, MapPin, Sparkles, Trash2 } from "lucide-react";
+import { ArrowLeft, MapPin, PlayCircle, Sparkles, Trash2 } from "lucide-react";
 
 import { apiEventi, apiPartite, apiRicostruzione, apiVideo } from "@/api";
 import { ErroreApi } from "@/api";
@@ -28,10 +28,16 @@ import {
   PallinoColore,
 } from "@/componenti/decorativi";
 import { BottoneEsportaPartita } from "@/componenti/BottoneEsportaPartita";
+import { VisoreReplay } from "@/componenti/VisoreReplay";
 import { FormEvento } from "@/componenti/FormEvento";
 import { ModaleSetupAutomatico } from "@/componenti/ModaleSetupAutomatico";
 import { PannelloEventi } from "@/componenti/PannelloEventi";
 import { PannelloProposteAggregazione } from "@/componenti/PannelloProposteAggregazione";
+import { PannelloCalibrazione } from "@/componenti/PannelloCalibrazione";
+import { PannelloDiscrepanze } from "@/componenti/PannelloDiscrepanze";
+import { PannelloFrameInferenzeEvento } from "@/componenti/PannelloFrameInferenzeEvento";
+import { PannelloLinterInferenze } from "@/componenti/PannelloLinterInferenze";
+import { PannelloStatisticheDiscrepanze } from "@/componenti/PannelloStatisticheDiscrepanze";
 import { PannelloStatistiche } from "@/componenti/PannelloStatistiche";
 import { PannelloStatoFinale } from "@/componenti/PannelloStatoFinale";
 import { PannelloUploadVideo } from "@/componenti/PannelloUploadVideo";
@@ -119,6 +125,7 @@ export function PaginaDettaglioPartita() {
   // Trigger di refresh per il PannelloProposteAggregazione (cambia per
   // forzare un re-render dopo accettazione/rifiuto)
   const [refreshProposte, setRefreshProposte] = useState(0);
+  const [visoreReplayAperto, setVisoreReplayAperto] = useState(false);
 
   const videoCorrente = partita.dato?.video[0] ?? null;
 
@@ -357,6 +364,17 @@ export function PaginaDettaglioPartita() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setVisoreReplayAperto(true)}
+            className="btn-secondario"
+            title="Riproduci la partita evento per evento"
+            disabled={
+              validati.dato === null || validati.dato.length === 0
+            }
+          >
+            <PlayCircle size={14} /> Replay
+          </button>
           <BottoneEsportaPartita partitaId={p.id} />
           <BottoneEliminaPartita partitaId={p.id} />
         </div>
@@ -492,6 +510,31 @@ export function PaginaDettaglioPartita() {
               triggerRicarica={validati.dato.length}
             />
           ) : null}
+
+          {/* Calibrazione raddrizzamento: visibile se c'e' video caricato.
+              Prerequisito per la pipeline CV. */}
+          <PannelloCalibrazione
+            partitaId={p.id}
+            haVideo={videoCorrente !== null}
+          />
+
+          {/* Discrepanze CV ↔ motore: visibile solo se ci sono inferenze
+              CV nel DB. Si nasconde graziosamente se la partita non ha
+              ancora il modello CV (caso normale finora). */}
+          <PannelloDiscrepanze partitaId={p.id} />
+
+          {/* Linter inferenze CV: si nasconde se non ci sono inferenze. */}
+          <PannelloLinterInferenze partitaId={p.id} />
+
+          {/* Statistiche aggregate sulle divergenze (se ce ne sono). */}
+          <PannelloStatisticheDiscrepanze partitaId={p.id} />
+
+          {/* Frame raddrizzato + bbox inferenze per debug singolo evento.
+              Si nasconde se non ci sono eventi validati. */}
+          <PannelloFrameInferenzeEvento
+            partitaId={p.id}
+            triggerRicarica={validati.dato?.length ?? 0}
+          />
         </div>
 
         {/* Colonna destra: eventi */}
@@ -558,6 +601,14 @@ export function PaginaDettaglioPartita() {
             // Forza il pannello proposte a re-fetchare (la proposta sparisce)
             setRefreshProposte((n) => n + 1);
           }}
+        />
+      ) : null}
+
+      {/* Visore replay (modale, mock player finché BC non consegna la lib) */}
+      {visoreReplayAperto ? (
+        <VisoreReplay
+          partitaId={p.id}
+          onChiudi={() => setVisoreReplayAperto(false)}
         />
       ) : null}
     </div>

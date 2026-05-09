@@ -17,6 +17,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+cv = [
+    # OpenCV per raddrizzamento prospettico dei frame video.
+    # Opzionale: se non installato, gli endpoint CV sollevano 503.
+    # Installa con: pip install -e ".[cv]"
+    "opencv-python>=4.10.0",
+    "numpy>=1.26.0",
+]
 dev = [
     "pytest>=8.2.0",
     "pytest-asyncio>=0.23.0",
@@ -62,6 +69,13 @@ no_implicit_reexport = false
 [[tool.mypy.overrides]]
 module = ["alembic.*"]
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+# cv2 e numpy hanno typing parziale o assente; usiamo gli stubs runtime-only
+# per il codice di raddrizzamento, dove l'astrazione `Raddrizzatore` ci
+# protegge comunque dai bug di tipo.
+module = ["cv2", "cv2.*", "numpy", "numpy.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

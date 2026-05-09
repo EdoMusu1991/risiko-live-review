@@ -160,6 +160,54 @@ class ServizioRicostruzione:
         risultato = await db.execute(stmt)
         return risultato.scalar_one_or_none()
 
+    @staticmethod
+    async def ricostruisci_fino_a_evento(
+        db: AsyncSession, partita_id: str, evento_id: str,
+    ) -> StatoPartitaSnapshot | None:
+        """
+        Ricostruisce lo stato motore applicando gli eventi DALL'INIZIO
+        FINO ALL'evento specificato (incluso).
+
+        Returns:
+            StatoPartitaSnapshot al momento subito DOPO l'evento, oppure
+            None se la partita non e' partita (fase = PRE_PARTITA).
+
+        Raises:
+            HTTPException equivalent: l'evento non appartiene alla partita.
+
+        Note:
+            Non persiste lo snapshot, e' solo per query temporanea.
+            Costo: O(N_eventi_fino_a_target). Per partite < 500 eventi
+            e' istantaneo (~50ms).
+        """
+        partita = await ServizioRicostruzione._carica_partita(db, partita_id)
+        eventi = list(partita.eventi_validati)
+
+        # Verifica che l'evento target appartenga alla partita
+        evento_trovato = False
+        for ev in eventi:
+            if ev.id == evento_id:
+                evento_trovato = True
+                break
+        if not evento_trovato:
+            raise ValueError(
+                f"Evento '{evento_id}' non trovato nella partita '{partita_id}'"
+            )
+
+        motore = ServizioRicostruzione._crea_motore(partita)
+
+        for indice, evento in enumerate(eventi):
+            ServizioRicostruzione._applica_evento(
+                motore, evento, posizione=indice
+            )
+            if evento.id == evento_id:
+                # Stop dopo aver applicato l'evento target
+                break
+
+        if motore.fase_corrente == FaseTurno.PRE_PARTITA:
+            return None
+        return ServizioRicostruzione._serializza_stato(motore)
+
     # === Private: caricamento dati ===
 
     @staticmethod

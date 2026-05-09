@@ -1,5 +1,9 @@
 """Modelli SQLAlchemy ORM del dominio review partite."""
 
+from app.modelli.inferenza_cv import (
+    DivergenzaInferita,
+    InferenzaCV,
+)
 from app.modelli.partita import (
     EventoGrezzo,
     EventoValidato,
@@ -17,10 +21,12 @@ from app.modelli.tipi import (
 
 __all__ = [
     "ColoreGiocatore",
+    "DivergenzaInferita",
     "EventoGrezzo",
     "EventoValidato",
     "FonteEvento",
     "GiocatorePartita",
+    "InferenzaCV",
     "Partita",
     "StatoPartitaRicostruito",
     "StatoReview",

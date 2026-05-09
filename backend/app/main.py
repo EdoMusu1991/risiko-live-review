@@ -19,10 +19,14 @@ from app.configurazione import Base, engine, impostazioni
 from app.routers import (
     aggregazione,
     classifica_club,
+    diagnostica,
     esportazione,
     eventi,
+    frame,
     import_bundle,
+    inferenze_cv,
     partite,
+    raddrizzamento,
     ricostruzione,
     risorse,
     statistiche,
@@ -44,6 +48,7 @@ async def ciclo_vita(_: FastAPI) -> AsyncIterator[None]:
     """
     # Crea cartella storage video se manca
     impostazioni.storage_video_path.mkdir(parents=True, exist_ok=True)
+    impostazioni.storage_frame_path.mkdir(parents=True, exist_ok=True)
 
     if impostazioni.auto_create_schema:
         # Modalità dev/test: crea le tabelle se non esistono.
@@ -88,6 +93,10 @@ app.include_router(aggregazione.router, prefix=impostazioni.api_prefix)
 app.include_router(statistiche.router, prefix=impostazioni.api_prefix)
 app.include_router(validazione.router, prefix=impostazioni.api_prefix)
 app.include_router(classifica_club.router, prefix=impostazioni.api_prefix)
+app.include_router(frame.router, prefix=impostazioni.api_prefix)
+app.include_router(raddrizzamento.router, prefix=impostazioni.api_prefix)
+app.include_router(inferenze_cv.router, prefix=impostazioni.api_prefix)
+app.include_router(diagnostica.router, prefix=impostazioni.api_prefix)
 
 
 @app.get("/", tags=["root"])

@@ -54,7 +54,8 @@ Stack: Python 3.12, FastAPI, SQLAlchemy 2 async, Pydantic v2, Postgres
 
 **Routers**: `partite`, `eventi`, `video`, `ricostruzione`, `risorse`,
 `esportazione`, `import_bundle`, `aggregazione`, `statistiche`,
-`validazione`, `classifica_club`.
+`validazione`, `classifica_club`, `frame`, `raddrizzamento`,
+`inferenze_cv`.
 
 **Servizi (logica pura/quasi-pura)**: `partita_servizio`,
 `setup_automatico_servizio` (genera 46 eventi setup),
@@ -62,10 +63,56 @@ Stack: Python 3.12, FastAPI, SQLAlchemy 2 async, Pydantic v2, Postgres
 accetta), `ricostruzione_servizio` (wrap risiko_engine),
 `statistiche_partita_servizio`, `validazione_coerenza_servizio`,
 `classifica_club_servizio` (aggregazione cross-partita),
-`esportazione_servizio`, `video_servizio`.
+`esportazione_servizio`, `video_servizio`,
+`estrazione_frame_servizio` (ffmpeg per CV), `raddrizzamento_servizio`
+(OpenCV per CV), `discrepanze_servizio` (algoritmo CV ↔ motore puro).
 
-**209 test verdi**, ruff + mypy strict puliti, deploy Railway pronto
-(Dockerfile multi-stage + entrypoint Alembic). Vedi `backend/README.md`.
+**253 test verdi**, ruff + mypy strict puliti, deploy Railway pronto
+(Dockerfile multi-stage + entrypoint Alembic + 2 migrazioni). Vedi
+`backend/README.md`.
+
+### Pipeline CV pronta (modello esterno)
+
+Il backend espone gli step preparatori per il riconoscimento via
+computer vision:
+
+1. **Estrazione frame**: dato un video di partita, estrae il frame
+   corrispondente al timestamp di ogni evento BLE (cache su disco).
+   Endpoint: `GET /api/partite/{id}/eventi/{ev}/frame`.
+2. **Raddrizzamento prospettico**: calibra una matrice di omografia
+   per la partita (1 sola volta), poi applica il warp ai frame estratti
+   per ottenere la "vista canonica" della plancia, in cui le pedine
+   hanno scala stabile.
+   Endpoint: `POST /api/partite/{id}/calibra-raddrizzamento`,
+   `GET /api/partite/{id}/eventi/{ev}/frame-raddrizzato`,
+   `POST /api/partite/{id}/raddrizza-tutti-eventi-validati`.
+3. **Schema dati inferenze CV**: tabelle `InferenzaCV` (con bbox,
+   confidence, scomposizione, modello_versione) e `DivergenzaInferita`
+   (CV ↔ motore). Una pipeline esterna popola `InferenzaCV` via
+   `POST /api/partite/{id}/inferenze-cv` (batch atomico).
+4. **Algoritmo discrepanze**: `POST /api/partite/{id}/calcola-discrepanze`
+   confronta lo stato motore (da `StatoPartitaRicostruito`) con le
+   inferenze CV e produce divergenze ordinate per delta_assoluto.
+5. **Review umana**: `GET /api/partite/{id}/discrepanze` ritorna le
+   divergenze; `PATCH /api/partite/{id}/discrepanze/{div_id}` permette
+   all'operatore di risolverle (`accettata_motore`, `accettata_cv`,
+   `evento_aggiunto`).
+
+OpenCV è dipendenza **opzionale**: si installa con
+`pip install -e ".[cv]"`. Se non installato, gli endpoint di
+raddrizzamento ritornano 503 con messaggio chiaro; il resto del backend
+funziona invariato.
+
+Il modello CV vero (Roboflow / YOLO / RT-DETR) è in addestramento in
+una conversazione separata. Quando sarà pronto, l'integrazione richiede
+solo un nuovo servizio `cv_servizio.py` che:
+- Consuma i frame raddrizzati dagli endpoint sopra
+- Chiama l'API Roboflow (o esegue inferenza locale)
+- POSTa le inferenze al backend RL via `/inferenze-cv`
+- Triggera `/calcola-discrepanze`
+
+Tutto il resto (cache, schema, algoritmo, review) è già pronto e
+testato.
 
 ### `frontend/` — React app
 Stack: React 18, Vite, TypeScript strict, Tailwind 3, React Router v6.
@@ -107,13 +154,18 @@ verificato via round-trip Python→JSON→zod. Consumato dal frontend RL
 
 | Componente | Stato | Test |
 |---|---|---|
-| Backend pipeline import→aggregazione→accetta→ricostruzione | ✅ completo | 209 |
+| Backend pipeline import→aggregazione→accetta→ricostruzione | ✅ completo | 253 |
 | Backend statistiche aggregate (attacco + difesa via motore) | ✅ completo | (incl.) |
 | Backend validatore coerenza eventi pre-ricostruzione | ✅ completo | (incl.) |
 | Backend export bundle replay per Battle Commander | ✅ completo | (incl.) |
 | Backend classifica club cross-partita | ✅ completo | (incl.) |
 | Backend export CSV per analytics esterne | ✅ completo | (incl.) |
 | Backend elimina eventi grezzi batch atomico | ✅ completo | (incl.) |
+| Backend estrazione frame da video (ffmpeg + cache) | ✅ completo | (incl.) |
+| Backend raddrizzamento prospettico (OpenCV opzionale) | ✅ completo | (incl.) |
+| Backend schema InferenzaCV + DivergenzaInferita | ✅ completo | (incl.) |
+| Backend algoritmo discrepanze CV ↔ motore | ✅ completo | (incl.) |
+| Backend endpoint review divergenze | ✅ completo | (incl.) |
 | Frontend pannello validazione | ✅ completo | typecheck OK |
 | Frontend pagina classifica club | ✅ completo | typecheck OK |
 | Frontend rifiuta proposte batch + "rifiuta tutte" | ✅ completo | typecheck OK |

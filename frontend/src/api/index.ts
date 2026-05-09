@@ -31,6 +31,31 @@ export type {
   ClassificaClub,
   GiocatoreClub,
 } from "./classificaClub";
+export { apiInferenzeCV } from "./inferenzeCV";
+export type {
+  AggiornamentoBulkDivergenze,
+  DivergenzaInferita,
+  InferenzaCV,
+  ProblemaInferenza,
+  RiepilogoAnalisiBatch,
+  RiepilogoDiscrepanze,
+  RisoluzioneDivergenza,
+  RisultatoBulkDivergenze,
+  RisultatoValidazione,
+  StatisticheDiscrepanze,
+  SuggerimentoEvento,
+} from "./inferenzeCV";
+export { apiDiagnostica } from "./diagnostica";
+export type {
+  StatoComponente,
+  StatoPipelineCv,
+} from "./diagnostica";
+export { apiRaddrizzamento } from "./raddrizzamento";
+export type {
+  RiepilogoBatchRaddrizza,
+  RisultatoCalibrazione,
+  StatoRaddrizzamento,
+} from "./raddrizzamento";
 export type { TerritorioInfo, ObiettivoInfo } from "./risorse";
 export type {
   SetupAutomaticoRichiesta,

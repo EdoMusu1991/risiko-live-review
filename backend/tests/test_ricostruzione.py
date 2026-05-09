@@ -635,3 +635,78 @@ async def test_ricostruisci_turno_completo(client_test: AsyncClient) -> None:
     assert stato["conteggio_mani"][p1] == 1
     # Spostamento conteggio: cina ha le 2 iniziali + 1 spostata
     assert stato["territori"][TERRITORIO_P1_SOSTA_A]["armate"] == 3
+
+
+# === Test ricostruisci fino a evento N (snapshot intermedi) ===
+
+
+@pytest.mark.asyncio
+async def test_ricostruisci_fino_a_evento_snapshot_intermedio(
+    sessione_test,
+    client_test: AsyncClient,
+) -> None:
+    """
+    Ricostruisci fino a un evento intermedio: stato motore subito DOPO
+    quell'evento. Permette discrepanze evento-per-evento (non solo finale).
+    """
+    from sqlalchemy import select
+
+    from app.modelli import EventoValidato
+    from app.servizi.ricostruzione_servizio import ServizioRicostruzione
+
+    pid, p1, p2 = await _crea_partita(client_test)
+    ts_base = datetime(2026, 5, 7, 21, 0, tzinfo=UTC)
+    eventi = _eventi_setup_completo(p1, p2, ts_base)
+
+    # Aggiungi evento di piazzamento dopo setup
+    eventi.append({
+        "ts_evento": (ts_base + timedelta(minutes=5)).isoformat(),
+        "tipo": "armate_piazzate",
+        "dati": {
+            "giocatore_id": p1,
+            "territorio": TERRITORIO_P1_ATTACCO,
+            "n": 1,
+        },
+    })
+    await _carica_eventi(client_test, pid, eventi)
+
+    # Recupera ID dell'ultimo evento di setup (PARTITA_INIZIO, indice 44)
+    ris = await sessione_test.execute(
+        select(EventoValidato)
+        .where(EventoValidato.partita_id == pid)
+        .order_by(EventoValidato.ts_evento)
+    )
+    eventi_db = list(ris.scalars().all())
+    assert len(eventi_db) == 46  # 42 + 2 + 1 + 1
+
+    # Stato dopo PARTITA_INIZIO (indice 44, 45esimo): RINFORZO, no armate piazzate
+    evento_partita_inizio_id = eventi_db[44].id
+    snapshot_inizio = await ServizioRicostruzione.ricostruisci_fino_a_evento(
+        sessione_test, pid, evento_partita_inizio_id,
+    )
+    assert snapshot_inizio is not None
+    assert snapshot_inizio.fase_corrente == "rinforzo"
+    armate_iniziali = snapshot_inizio.territori[TERRITORIO_P1_ATTACCO].armate
+
+    # Stato dopo ARMATE_PIAZZATE (ultimo evento)
+    evento_piazzate_id = eventi_db[45].id
+    snapshot_dopo = await ServizioRicostruzione.ricostruisci_fino_a_evento(
+        sessione_test, pid, evento_piazzate_id,
+    )
+    assert snapshot_dopo is not None
+    armate_dopo = snapshot_dopo.territori[TERRITORIO_P1_ATTACCO].armate
+    assert armate_dopo == armate_iniziali + 1
+
+
+@pytest.mark.asyncio
+async def test_ricostruisci_fino_a_evento_inesistente_solleva(
+    sessione_test,
+    client_test: AsyncClient,
+) -> None:
+    from app.servizi.ricostruzione_servizio import ServizioRicostruzione
+
+    pid, _p1, _p2 = await _crea_partita(client_test)
+    with pytest.raises(ValueError, match="non trovato"):
+        await ServizioRicostruzione.ricostruisci_fino_a_evento(
+            sessione_test, pid, "00000000-0000-0000-0000-000000000000",
+        )

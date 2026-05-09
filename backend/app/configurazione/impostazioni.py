@@ -42,6 +42,12 @@ class Impostazioni(BaseSettings):
         description="Cartella per i file video delle partite",
     )
 
+    #: Cartella dove salvare i frame estratti dai video (cache CV).
+    storage_frame_path: Path = Field(
+        default=Path("./storage_frame"),
+        description="Cartella per i frame estratti dai video (cache analisi CV)",
+    )
+
     #: Dimensione massima upload video (default 10 GB).
     upload_max_size_mb: int = 10240
 
