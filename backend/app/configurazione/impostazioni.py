@@ -48,6 +48,13 @@ class Impostazioni(BaseSettings):
         description="Cartella per i frame estratti dai video (cache analisi CV)",
     )
 
+    #: Cartella dove estrarre i bundle mobile (M14 endpoint).
+    #: Su Railway impostare a un volume persistente o S3 mount.
+    storage_partite_path: Path = Field(
+        default=Path("./storage_partite"),
+        description="Cartella di destinazione per i bundle ZIP estratti dall'app mobile",
+    )
+
     #: Dimensione massima upload video (default 10 GB).
     upload_max_size_mb: int = 10240
 

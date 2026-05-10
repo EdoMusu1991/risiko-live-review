@@ -88,7 +88,7 @@ async def test_import_bundle_minimo(client_test: AsyncClient) -> None:
     bundle = _crea_bundle(_manifest_minimo())
 
     risposta = await client_test.post(
-        "/api/import/bundle-mobile",
+        "/api/import/bundle-mobile-legacy",
         files={"file": ("partita.zip", bundle, "application/zip")},
     )
     assert risposta.status_code == 201, risposta.text
@@ -147,7 +147,7 @@ async def test_import_bundle_con_eventi_dadi(
     )
 
     risposta = await client_test.post(
-        "/api/import/bundle-mobile",
+        "/api/import/bundle-mobile-legacy",
         files={"file": ("partita.zip", bundle, "application/zip")},
     )
     assert risposta.status_code == 201, risposta.text
@@ -227,7 +227,7 @@ async def test_import_bundle_eventi_malformati_scartati(
     )
 
     risposta = await client_test.post(
-        "/api/import/bundle-mobile",
+        "/api/import/bundle-mobile-legacy",
         files={"file": ("partita.zip", bundle, "application/zip")},
     )
     assert risposta.status_code == 201
@@ -246,7 +246,7 @@ async def test_import_bundle_eventi_malformati_scartati(
 @pytest.mark.asyncio
 async def test_import_bundle_non_zip(client_test: AsyncClient) -> None:
     risposta = await client_test.post(
-        "/api/import/bundle-mobile",
+        "/api/import/bundle-mobile-legacy",
         files={"file": ("non.txt", b"hello", "text/plain")},
     )
     assert risposta.status_code == 400
@@ -255,7 +255,7 @@ async def test_import_bundle_non_zip(client_test: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_import_bundle_zip_corrotto(client_test: AsyncClient) -> None:
     risposta = await client_test.post(
-        "/api/import/bundle-mobile",
+        "/api/import/bundle-mobile-legacy",
         files={"file": ("partita.zip", b"NOTAZIP", "application/zip")},
     )
     assert risposta.status_code == 400
@@ -271,7 +271,7 @@ async def test_import_bundle_senza_manifest(client_test: AsyncClient) -> None:
     buffer.seek(0)
 
     risposta = await client_test.post(
-        "/api/import/bundle-mobile",
+        "/api/import/bundle-mobile-legacy",
         files={"file": ("partita.zip", buffer.read(), "application/zip")},
     )
     assert risposta.status_code == 400
@@ -284,7 +284,7 @@ async def test_import_bundle_schema_version_non_supportata(
 ) -> None:
     bundle = _crea_bundle(_manifest_minimo(schema_version="999.0"))
     risposta = await client_test.post(
-        "/api/import/bundle-mobile",
+        "/api/import/bundle-mobile-legacy",
         files={"file": ("partita.zip", bundle, "application/zip")},
     )
     assert risposta.status_code == 400
@@ -301,7 +301,7 @@ async def test_import_bundle_manifest_invalido(
     bundle = _crea_bundle(manifest)
 
     risposta = await client_test.post(
-        "/api/import/bundle-mobile",
+        "/api/import/bundle-mobile-legacy",
         files={"file": ("partita.zip", bundle, "application/zip")},
     )
     assert risposta.status_code == 400
@@ -319,7 +319,7 @@ async def test_import_bundle_video_mancante(client_test: AsyncClient) -> None:
     buffer.seek(0)
 
     risposta = await client_test.post(
-        "/api/import/bundle-mobile",
+        "/api/import/bundle-mobile-legacy",
         files={"file": ("partita.zip", buffer.read(), "application/zip")},
     )
     assert risposta.status_code == 400
@@ -336,7 +336,7 @@ async def test_import_bundle_hash_video_errato(
     bundle = _crea_bundle(manifest, video_bytes=b"VIDEO_DIFFERENTE")
 
     risposta = await client_test.post(
-        "/api/import/bundle-mobile",
+        "/api/import/bundle-mobile-legacy",
         files={"file": ("partita.zip", bundle, "application/zip")},
     )
     assert risposta.status_code == 400

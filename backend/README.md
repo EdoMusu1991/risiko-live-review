@@ -1,124 +1,188 @@
-# Scripts di sviluppo e manutenzione
+# Risiko Live Review — Backend
 
-Questo è un drawer di script Python usabili durante lo sviluppo e
-operations. Non fanno parte del servizio runtime (non sono importati
-da `app/`).
+Backend FastAPI per la review e validazione di partite Risiko.
 
-## seed_demo_ble.py
+## Requisiti
 
-Popola il DB con una partita demo + giocatori + eventi BLE plausibili,
-così puoi testare il flusso UI di review delle proposte di aggregazione
-**senza dover passare dall'app mobile** (che non esiste ancora).
+- Python 3.12+
+- (opzionale) Docker Desktop per Postgres
 
-### Uso
+## Setup rapido (SQLite, no Docker)
 
-Avvia prima il backend in dev (es. `uvicorn app.main:app --reload`),
-poi in un altro terminale:
+Per partire subito senza Docker, usa SQLite. Su PowerShell Windows:
 
-```bash
-# Da /backend
-python scripts/seed_demo_ble.py
+```powershell
+cd backend
+
+# Crea ambiente virtuale
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+
+# Installa dipendenze
+pip install -e ".[dev]"
+
+# Copia file env
+Copy-Item .env.example .env
+
+# Avvia il server
+uvicorn app.main:app --reload
 ```
 
-Output:
+Il server gira su <http://localhost:8000>. Documentazione interattiva su <http://localhost:8000/docs>.
 
-```
-✓ Partita seed creata: id=…, 3 giocatori, 3 attacchi → 10 eventi BLE grezzi
+## Setup con Postgres (Docker)
 
-============================================================
-FRONTEND URL (default Vite dev server):
-  http://localhost:5173/partite/63ca4e27-…
-============================================================
-```
+Più realistico per ambiente che simula produzione:
 
-Apri l'URL e dovresti vedere:
-- Partita "Il Gufo · Roma (DEMO)" con 3 giocatori (Edoardo/Marco/Alice)
-- Pannello "Proposte aggregazione dadi BLE" con 3 proposte:
-  1. Attacco pulito 3v3 (confidenza 1.0)
-  2. Attacco 2v1 (confidenza 1.0)
-  3. Attacco 1v0 (confidenza 0.5, anomalia "nessun dado difensore")
+```powershell
+# Avvia Postgres + Adminer
+cd ..
+docker-compose up -d
 
-Click "Accetta" su una proposta → si apre `ModaleAccettaProposta`,
-compili giocatore + territori + dadi, conferma → la proposta sparisce
-dalla lista e compare un nuovo `EventoValidato` di tipo `attacco_risolto`
-nel pannello eventi.
+# Modifica backend/.env e usa:
+# RISIKO_DATABASE_URL=postgresql+asyncpg://risiko:risiko_dev_password@localhost:5432/risiko_review
 
-**Bonus**: dopo aver accettato almeno una proposta, il `PannelloStatistiche`
-sotto lo stato finale si auto-popola mostrando metriche per giocatore
-(numero attacchi, dadi tirati, conquiste, perdite/vincite armate) e
-totali partita (n_turni, durata, n_attacchi).
-
-### Idempotenza
-
-Lo script è idempotente: se trovi una partita con `note="Demo BLE Seed"`,
-la riusa. Per ricreare da zero usa `--reset`.
-
-```bash
-# Riusa la stessa partita seed (no-op se già presente)
-python scripts/seed_demo_ble.py
-
-# Elimina e ricrea (utile dopo aver "consumato" tutte le proposte)
-python scripts/seed_demo_ble.py --reset
-
-# Solo 1 attacco invece di 3
-python scripts/seed_demo_ble.py --reset --n-attacchi 1
+cd backend
+uvicorn app.main:app --reload
 ```
 
-### Configurazione DB
+Adminer (interfaccia DB web) gira su <http://localhost:8080>.
 
-Il seed scrive sul DB configurato dalle stesse env vars usate dal
-backend (`RISIKO_DATABASE_URL`). In sviluppo locale di solito è
-SQLite o un Postgres docker-compose; non puntare mai questo script
-verso un DB di produzione.
+## Test
 
-## verifica_e2e.py
-
-Smoke test diverso: costruisce un bundle ZIP "realistico" e lo invia
-a `POST /api/import/bundle-mobile` per verificare che l'endpoint
-import funzioni. Lanciare con `python verifica_e2e.py`.
-
-A differenza del seed, questo va attraverso l'API HTTP, quindi il
-backend deve essere già attivo su `localhost:8000`.
-
-## genera_bundle_esempio.py
-
-Genera un bundle replay (JSON conforme a `@risiko/eventi-schema`
-`BundleReplay`) usabile come fixture per test:
-
-- Test di Battle Commander quando integra il modulo replay
-- Test del frontend RL quando avrà il visore replay
-- Smoke test del contratto cross-system
-
-### Uso
-
-```bash
-# Default output: ./bundle-replay-esempio.json
-python scripts/genera_bundle_esempio.py
-
-# Output custom (es. aggiornare fixture del pacchetto zod)
-python scripts/genera_bundle_esempio.py \
-  ../packages/eventi-schema/fixtures/bundle-replay-esempio.json
+```powershell
+pytest                    # tutti i test
+pytest tests/test_partite.py -v   # un singolo file
+pytest -k "crea_partita" -v       # filtra per nome
 ```
 
-Lo script costruisce un DB SQLite in-memory dedicato (non tocca quello
-configurato), simula una partita 3 giocatori con setup automatico + 5
-turni con rinforzi/attacchi/conquiste, ed esporta il bundle. Output
-deterministico (seed RNG = 42).
+I test usano SQLite in-memory, sono indipendenti dal DB di sviluppo.
 
-Output di esempio (variabile per stati casuali):
+## Lint e type check
+
+```powershell
+ruff check .              # lint
+ruff check . --fix        # autofix
+mypy app                  # type check (strict)
+```
+
+## Struttura del codice
 
 ```
-Bundle scritto: bundle-replay-esempio.json
-  schema_version: 1.0
-  giocatori: 3
-  eventi: 69
-  per tipo:
-    armate_piazzate: 5
-    attacco_risolto: 6
-    obiettivo_assegnato: 3
-    partita_inizio: 1
-    territorio_assegnato_inizio: 42
-    territorio_conquistato: 2
-    turno_finito: 5
-    turno_iniziato: 5
+backend/
+├── app/
+│   ├── main.py              # entry point FastAPI
+│   ├── configurazione/      # settings + DB connection
+│   ├── modelli/             # SQLAlchemy ORM
+│   ├── schemi/              # Pydantic v2 (request/response + dati eventi + snapshot)
+│   ├── routers/             # endpoint API (partite, eventi, video, ricostruzione)
+│   ├── servizi/             # business logic (incl. ricostruzione via risiko_engine)
+│   └── storage/             # gestione filesystem video + ffprobe
+├── risiko_engine/           # motore regole Risiko (copia da Fase 1)
+├── tests/                   # pytest
+├── alembic/                 # migrazioni DB (TBD)
+└── pyproject.toml
 ```
+
+## API endpoints disponibili (v0.3)
+
+### Partite
+
+- `POST /api/partite` — crea nuova partita
+- `GET /api/partite` — lista partite (paginata, filtrabile per stato)
+- `GET /api/partite/{id}` — dettaglio partita
+- `PATCH /api/partite/{id}` — aggiorna metadata
+- `DELETE /api/partite/{id}` — elimina partita (con cleanup video filesystem + snapshot)
+- `POST /api/partite/{id}/setup-automatico` ⭐ NUOVO in v0.6 — distribuzione automatica territori/obiettivi/partita_inizio
+
+### Eventi grezzi
+
+- `POST /api/partite/{id}/eventi-grezzi` — aggiungi evento grezzo singolo
+- `POST /api/partite/{id}/eventi-grezzi/batch` — upload batch
+- `GET /api/partite/{id}/eventi-grezzi` — lista (con filtro `solo_non_validati`)
+- `DELETE /api/partite/{id}/eventi-grezzi/{eid}` — elimina evento
+
+### Eventi validati
+
+- `POST /api/partite/{id}/eventi-validati` — promuovi grezzo o crea manuale
+- `POST /api/partite/{id}/eventi-validati/batch` ⭐ NUOVO in v0.6 — inserimento atomico di N eventi (es. setup automatico)
+- `GET /api/partite/{id}/eventi-validati` — lista
+- `PATCH /api/partite/{id}/eventi-validati/{eid}` ⭐ NUOVO in v0.5 — modifica un evento (ts/tipo/dati/validato_da)
+- `DELETE /api/partite/{id}/eventi-validati/{eid}` ⭐ NUOVO in v0.5 — elimina un evento
+
+### Risorse statiche ⭐ NUOVO in v0.6
+
+- `GET /api/risorse/territori` — lista 42 territori canonici con adiacenze e continente
+- `GET /api/risorse/obiettivi` — lista 16 obiettivi del Risiko classico EG
+
+### Video
+
+- `POST /api/partite/{id}/video` — upload video (multipart, streaming, max 10 GB default)
+- `GET /api/partite/{id}/video` — lista video di una partita
+- `GET /api/partite/{id}/video/{vid}` — metadata video
+- `GET /api/partite/{id}/video/{vid}/stream` — streaming con supporto **HTTP Range** (seekable)
+- `DELETE /api/partite/{id}/video/{vid}` — elimina video (DB + filesystem)
+
+### Ricostruzione partita ⭐ NUOVO in v0.3
+
+- `POST /api/partite/{id}/ricostruisci` — applica gli eventi validati al motore `risiko_engine` per produrre lo stato finale
+- `GET /api/partite/{id}/stato-finale` — ritorna l'ultimo snapshot ricostruito
+
+### Health
+
+- `GET /` — info API
+- `GET /healthz` — health check
+
+## Dipendenze esterne
+
+### ffprobe (richiesto per upload video)
+
+Il backend usa `ffprobe` (parte di FFmpeg) per estrarre i metadata
+(durata, codec, risoluzione, ts_creazione) dai video caricati.
+
+**Installazione su Windows:**
+
+```powershell
+# Opzione 1: winget (Windows 10/11)
+winget install ffmpeg
+
+# Opzione 2: scoop
+scoop install ffmpeg
+
+# Opzione 3: download manuale
+# https://www.gyan.dev/ffmpeg/builds/ → release essentials
+# Scompatta e aggiungi /bin al PATH
+```
+
+Verifica:
+```powershell
+ffprobe -version
+```
+
+Se ffprobe non è disponibile, l'endpoint upload risponde 500 con messaggio chiaro.
+
+## Motore regole (`risiko_engine`)
+
+Il backend include il pacchetto `risiko_engine/` come **sotto-package
+self-contained**, copiato dal repo Fase 1.
+
+Funzionalità coperte dalla ricostruzione (v0.3):
+- 9 applicatori `TipoEvento → metodo MotorePartita`: territorio_assegnato_inizio, obiettivo_assegnato, partita_inizio, armate_piazzate, tris_giocato, attacco_risolto, armate_spostate, turno_finito.
+- **Transizioni di fase implicite**: l'utente non deve creare eventi finti per `passa_a_attacco`/`passa_a_spostamento`. Il dispatcher li chiama automaticamente quando serve.
+- **Error recovery**: gli eventi che falliscono (payload invalido, azione illegale, tipo non supportato) sono registrati nella lista `errori` della risposta, ma non bloccano il resto della ricostruzione.
+- **Idempotenza**: ogni `POST /ricostruisci` sostituisce lo snapshot precedente. Stessi eventi → stesso stato finale.
+
+Per modifiche al motore, lavorare sul repo Fase 1 separato e ricopiare
+la cartella `risiko_engine/` qui dentro.
+
+## Roadmap immediata
+
+- ✅ Setup base, modelli, endpoint CRUD partite/eventi (v0.1)
+- ✅ Upload video con metadata extraction via ffprobe (v0.2)
+- ✅ Streaming video con HTTP Range (seekable nel browser)
+- ✅ Endpoint ricostruzione partita via `risiko_engine` (v0.3)
+- ✅ PATCH/DELETE eventi validati per editor interattivo (v0.5)
+- ✅ Setup automatico partita (regole EG, distribuzione round-robin, seed riproducibile) (v0.6)
+- ⬜ Migrazioni Alembic
+- ⬜ WebSocket per broadcast eventi (UI live)
+- ⬜ Promozione grezzo → validato dalla UI

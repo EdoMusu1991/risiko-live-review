@@ -35,7 +35,7 @@ class RispostaImportBundle(BaseModel):
 
 
 @router.post(
-    "/bundle-mobile",
+    "/bundle-mobile-legacy",
     response_model=RispostaImportBundle,
     status_code=status.HTTP_201_CREATED,
     summary="Importa bundle ZIP prodotto dall'app mobile",

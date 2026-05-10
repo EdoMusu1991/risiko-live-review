@@ -16,6 +16,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.configurazione import Base, engine, impostazioni
+from app.middleware.error_handler import registra_exception_handlers
+from app.middleware.request_id import RequestIdMiddleware
 from app.routers import (
     aggregazione,
     classifica_club,
@@ -23,7 +25,9 @@ from app.routers import (
     esportazione,
     eventi,
     frame,
+    health,
     import_bundle,
+    import_bundle_mobile,
     inferenze_cv,
     partite,
     raddrizzamento,
@@ -33,6 +37,7 @@ from app.routers import (
     validazione,
     video,
 )
+from app.utili.logging_setup import configura_logging
 
 
 @asynccontextmanager
@@ -46,9 +51,13 @@ async def ciclo_vita(_: FastAPI) -> AsyncIterator[None]:
     nessun create_all viene eseguito; il deploy deve aver applicato
     le migrazioni prima.
     """
+    # Logging strutturato JSON line-per-line (Loki/Datadog/CloudWatch friendly)
+    configura_logging(level="INFO")
+
     # Crea cartella storage video se manca
     impostazioni.storage_video_path.mkdir(parents=True, exist_ok=True)
     impostazioni.storage_frame_path.mkdir(parents=True, exist_ok=True)
+    impostazioni.storage_partite_path.mkdir(parents=True, exist_ok=True)
 
     if impostazioni.auto_create_schema:
         # Modalità dev/test: crea le tabelle se non esistono.
@@ -79,7 +88,16 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID"],
 )
+
+# Request ID middleware: assegna UUID v4 a ogni richiesta, lo propaga via
+# context var, lo logga in JSON, lo aggiunge come header sulla response.
+app.add_middleware(RequestIdMiddleware)
+
+# Exception handler globale: cattura eccezioni non-HTTPException → 500 JSON
+# con `{errore, request_id, tipo}` e header X-Request-ID.
+registra_exception_handlers(app)
 
 # Registrazione router
 app.include_router(partite.router, prefix=impostazioni.api_prefix)
@@ -89,6 +107,7 @@ app.include_router(ricostruzione.router, prefix=impostazioni.api_prefix)
 app.include_router(risorse.router, prefix=impostazioni.api_prefix)
 app.include_router(esportazione.router, prefix=impostazioni.api_prefix)
 app.include_router(import_bundle.router, prefix=impostazioni.api_prefix)
+app.include_router(import_bundle_mobile.router, prefix=impostazioni.api_prefix)
 app.include_router(aggregazione.router, prefix=impostazioni.api_prefix)
 app.include_router(statistiche.router, prefix=impostazioni.api_prefix)
 app.include_router(validazione.router, prefix=impostazioni.api_prefix)
@@ -97,6 +116,7 @@ app.include_router(frame.router, prefix=impostazioni.api_prefix)
 app.include_router(raddrizzamento.router, prefix=impostazioni.api_prefix)
 app.include_router(inferenze_cv.router, prefix=impostazioni.api_prefix)
 app.include_router(diagnostica.router, prefix=impostazioni.api_prefix)
+app.include_router(health.router, prefix=impostazioni.api_prefix)
 
 
 @app.get("/", tags=["root"])
