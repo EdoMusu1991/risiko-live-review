@@ -44,9 +44,10 @@ import { PannelloUploadVideo } from "@/componenti/PannelloUploadVideo";
 import { PannelloValidazione } from "@/componenti/PannelloValidazione";
 import { ModaleAccettaProposta } from "@/componenti/ModaleAccettaProposta";
 import {
-  PlayerVideo,
-  type RiferimentoPlayerVideo,
-} from "@/componenti/PlayerVideo";
+  PlayerVideoMultiSegmento,
+  type RiferimentoPlayerVideoMultiSegmento,
+  type SegmentoVideoPlayer,
+} from "@/componenti/PlayerVideoMultiSegmento";
 import type {
   EventoGrezzo,
   EventoValidato,
@@ -102,7 +103,7 @@ export function PaginaDettaglioPartita() {
   }
 
   // Player video + tracking secondo corrente
-  const playerRef = useRef<RiferimentoPlayerVideo | null>(null);
+  const playerRef = useRef<RiferimentoPlayerVideoMultiSegmento | null>(null);
   const [secondoCorrente, setSecondoCorrente] = useState(0);
 
   function saltaA(secondo: number) {
@@ -127,14 +128,31 @@ export function PaginaDettaglioPartita() {
   const [refreshProposte, setRefreshProposte] = useState(0);
   const [visoreReplayAperto, setVisoreReplayAperto] = useState(false);
 
-  const videoCorrente = partita.dato?.video[0] ?? null;
+  const videoList = partita.dato?.video ?? [];
+  const primoVideo = videoList[0] ?? null;
 
-  /** Calcola il timestamp ISO corrispondente al secondo corrente del video. */
+  /** Segmenti per il PlayerVideoMultiSegmento (1 elemento per Video record). */
+  const segmenti = useMemo<SegmentoVideoPlayer[]>(() => {
+    if (!partita.dato) return [];
+    const idPartita = partita.dato.id;
+    return videoList.map((v, i) => ({
+      id: v.id,
+      urlStream: apiVideo.urlStream(idPartita, v.id),
+      durataSec: v.durata_sec,
+      etichetta: `seg ${i + 1}/${videoList.length}`,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partita.dato]);
+
+  /**
+   * Calcola il timestamp ISO corrispondente al secondo globale corrente
+   * (cumulativo dall'inizio del primo segmento).
+   */
   const tsEventoFromVideo = useMemo(() => {
-    if (!videoCorrente) return new Date().toISOString();
-    const inizio = parseISO(videoCorrente.ts_inizio).getTime();
+    if (!primoVideo) return new Date().toISOString();
+    const inizio = parseISO(primoVideo.ts_inizio).getTime();
     return new Date(inizio + secondoCorrente * 1000).toISOString();
-  }, [videoCorrente, secondoCorrente]);
+  }, [primoVideo, secondoCorrente]);
 
   const apriCreazione = useCallback(
     (tipologia: "validato" | "grezzo" = "validato") => {
@@ -430,19 +448,31 @@ export function PaginaDettaglioPartita() {
 
           <section>
             <h3 className="etichetta mb-3">Video</h3>
-            {videoCorrente ? (
+            {videoList.length > 0 ? (
               <div>
-                <PlayerVideo
+                <PlayerVideoMultiSegmento
                   ref={playerRef}
-                  urlStream={apiVideo.urlStream(p.id, videoCorrente.id)}
-                  durataSec={videoCorrente.durata_sec}
+                  segmenti={segmenti}
                   onSecondoCambia={setSecondoCorrente}
                 />
                 <div className="mt-2 flex items-center justify-between text-xs text-inchiostro-tenue font-mono num-tab">
-                  <span>{videoCorrente.nome_originale}</span>
                   <span>
-                    {videoCorrente.risoluzione} · {videoCorrente.codec} ·{" "}
-                    {(videoCorrente.dimensione_byte / 1e9).toFixed(2)} GB
+                    {videoList.length === 1
+                      ? videoList[0]!.nome_originale
+                      : `${videoList.length} segmenti · totale ${(
+                          videoList.reduce((acc, v) => acc + v.durata_sec, 0) /
+                          60
+                        ).toFixed(1)} min`}
+                  </span>
+                  <span>
+                    {videoList[0]?.risoluzione ?? "—"}
+                    {videoList[0]?.codec ? ` · ${videoList[0].codec}` : ""}
+                    {" · "}
+                    {(
+                      videoList.reduce((acc, v) => acc + v.dimensione_byte, 0) /
+                      1e9
+                    ).toFixed(2)}{" "}
+                    GB
                   </span>
                 </div>
               </div>
@@ -473,8 +503,8 @@ export function PaginaDettaglioPartita() {
               key={refreshProposte}
               partitaId={p.id}
               onSeek={(ts) => {
-                if (videoCorrente) {
-                  const inizioVideo = new Date(videoCorrente.ts_inizio).getTime();
+                if (primoVideo) {
+                  const inizioVideo = new Date(primoVideo.ts_inizio).getTime();
                   const tsTarget = new Date(ts).getTime();
                   const offsetSec = (tsTarget - inizioVideo) / 1000;
                   if (offsetSec >= 0) saltaA(offsetSec);
@@ -515,7 +545,7 @@ export function PaginaDettaglioPartita() {
               Prerequisito per la pipeline CV. */}
           <PannelloCalibrazione
             partitaId={p.id}
-            haVideo={videoCorrente !== null}
+            haVideo={primoVideo !== null}
           />
 
           {/* Discrepanze CV ↔ motore: visibile solo se ci sono inferenze
@@ -550,7 +580,7 @@ export function PaginaDettaglioPartita() {
               eventiGrezzi={grezzi.dato ?? []}
               eventiValidati={validati.dato ?? []}
               giocatori={p.giocatori}
-              video={videoCorrente}
+              video={primoVideo}
               filtroTerritorio={territorioSelezionato}
               onPuliciFiltro={() => setTerritorioSelezionato(null)}
               onSaltaSecondo={saltaA}

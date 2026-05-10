@@ -904,11 +904,15 @@ def _crea_servizio_cv() -> "ServizioCV":
     """
     Costruisce il servizio CV con dipendenze di default.
 
-    Il client CV e' MOCK fino a quando il modello Roboflow non sara' pronto.
-    Per attivare il client reale, sostituire `ClientCVMock(...)` con
-    `ClientCVRoboflow(api_key=..., project_endpoint=...)` qui sotto.
+    Il client CV e' `ClientCVRoboflow` se le env vars `ROBOFLOW_API_KEY` e
+    `ROBOFLOW_ENDPOINT` sono settate. Altrimenti fallback a `ClientCVMock`
+    (utile in dev/test).
     """
-    from app.servizi.cv_servizio import ClientCVMock, ServizioCV
+    from app.servizi.cv_servizio import (
+        ClientCVMock,
+        ClientCVRoboflow,
+        ServizioCV,
+    )
     from app.servizi.estrazione_frame_servizio import ServizioEstrazioneFrame
     from app.servizi.raddrizzamento_servizio import ServizioRaddrizzamento
     from app.storage.estrattore_frame import get_estrattore_frame
@@ -950,8 +954,16 @@ def _crea_servizio_cv() -> "ServizioCV":
         raddrizzatore=raddrizzatore,
     )
 
-    # Client CV: mock per ora, da sostituire con Roboflow quando pronto
-    client = ClientCVMock(versione="mock-default-v1")
+    # Client CV: Roboflow se configurato, altrimenti mock
+    if impostazioni.roboflow_api_key and impostazioni.roboflow_endpoint:
+        client = ClientCVRoboflow(
+            api_key=impostazioni.roboflow_api_key,
+            project_endpoint=impostazioni.roboflow_endpoint,
+            confidence_minima=impostazioni.roboflow_confidence_min,
+            iou_minimo=impostazioni.roboflow_iou_min,
+        )
+    else:
+        client = ClientCVMock(versione="mock-default-v1")
 
     return ServizioCV(
         servizio_raddrizzamento=raddrizzamento,

@@ -28,3 +28,17 @@ export const apiDiagnostica = {
       cliente.get<StatoPipelineCv>("/diagnostica/pipeline-cv"),
     ),
 };
+
+export interface StatoScheduler {
+  abilitato: boolean;
+  in_esecuzione: boolean;
+  prossima_esecuzione: string | null;
+  giorni_cleanup: number;
+}
+
+export const apiScheduler = {
+  /** Stato dello scheduler in-process (cleanup automatico bundle). */
+  async stato(): Promise<StatoScheduler> {
+    return chiamaApi(cliente.get<StatoScheduler>("/scheduler"));
+  },
+};

@@ -28,9 +28,10 @@ from __future__ import annotations
 import hashlib
 import random
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -234,16 +235,18 @@ class ClientCVRoboflow(ClientCV):
     """
     Implementazione reale che chiama l'API Roboflow.
 
-    PLACEHOLDER: l'API esatta dipende dal progetto Roboflow specifico
-    (modello hosted vs serverless vs Docker locale). Verra' completata
-    quando il modello sara' addestrato e si conoscera'
-    `project_id`/`version_number`.
-
     Configurazione:
     - `api_key`: dal pannello Roboflow settings
     - `project_endpoint`: URL completo dell'endpoint hosted del modello
+       (es. `https://detect.roboflow.com/risiko-plancia/3`)
     - `confidence_minima`: filtra detection sotto soglia (default 0.5)
     - `iou_minimo`: NMS threshold per dedup (default 0.5)
+    - `parsa_classe`: funzione custom per estrarre `(colore, tipo,
+       n_armate)` dalla stringa `class` di Roboflow. Default: parsing
+       della convenzione `<colore>_<tipo>_<armate>` (es.
+       "rosso_carro_piccolo_3"). Se la convenzione non match,
+       ritorna `(None, None, 0)` e la detection sara' comunque
+       persistita ma con campi semantici vuoti.
     """
 
     def __init__(
@@ -254,6 +257,9 @@ class ClientCVRoboflow(ClientCV):
         versione: str | None = None,
         confidence_minima: float = 0.5,
         iou_minimo: float = 0.5,
+        parsa_classe: (
+            Callable[[str], tuple[str | None, TipoPedinaCv | None, int]] | None
+        ) = None,
     ) -> None:
         if not api_key:
             raise ClientCVNonConfiguratoError("api_key obbligatoria")
@@ -263,7 +269,7 @@ class ClientCVRoboflow(ClientCV):
         self._endpoint = project_endpoint
         self._confidence_min = confidence_minima
         self._iou_min = iou_minimo
-        # La versione viene dedotta dall'endpoint URL se non fornita esplicitamente
+        self._parsa_classe = parsa_classe or _parsa_classe_default
         self._versione = versione or _estrai_versione_da_endpoint(project_endpoint)
 
     @property
@@ -275,35 +281,148 @@ class ClientCVRoboflow(ClientCV):
         percorso_frame_raddrizzato: Path,
     ) -> list[DetectionCV]:
         """
-        TODO: implementazione reale Roboflow API.
+        Chiama l'API Roboflow su un singolo frame e ritorna le detection.
 
-        Pseudo-codice del flusso atteso:
+        Roboflow API ritorna un JSON con shape:
+            {
+              "predictions": [
+                {"x": cx, "y": cy, "width": w, "height": h,
+                 "confidence": 0..1, "class": "rosso_carro_piccolo_3"},
+                ...
+              ],
+              "image": {"width": ..., "height": ...}
+            }
 
-            import httpx
-            with open(percorso_frame_raddrizzato, 'rb') as f:
-                async with httpx.AsyncClient() as client:
-                    risposta = await client.post(
-                        self._endpoint,
-                        params={
-                            "api_key": self._api_key,
-                            "confidence": int(self._confidence_min * 100),
-                            "overlap": int(self._iou_min * 100),
-                            "format": "json",
-                        },
-                        files={"file": f},
-                    )
-            risposta.raise_for_status()
-            dati = risposta.json()
-            # dati["predictions"] = list di dict con bbox, class, confidence
-            # ...mapping a DetectionCV...
+        Coordinate `x`, `y` sono il **centro** della bbox (NON top-left),
+        quindi le convertiamo a top-left per coerenza con `DetectionCV.bbox`.
 
-        Una volta confermata l'API esatta dal progetto Roboflow,
-        sostituire il NotImplementedError sotto con il codice reale.
+        Detection con `class` non parsabile vengono comunque tornate, ma
+        con `colore=None`, `tipo_pedina_dominante=None`, `n_armate=0`. Il
+        servizio downstream puo' decidere se scartarle.
+
+        Raises:
+            ClientCVError: se il file non esiste o l'API risponde con errore
+            httpx.HTTPError: errori di rete (propagati)
         """
-        raise NotImplementedError(
-            "ClientCVRoboflow.inferisci(): da completare quando il modello "
-            "Roboflow sara' addestrato. Vedi pseudo-codice nel docstring."
-        )
+        import httpx
+
+        if not percorso_frame_raddrizzato.exists():
+            raise ClientCVError(
+                f"Frame non trovato: {percorso_frame_raddrizzato}"
+            )
+
+        with percorso_frame_raddrizzato.open("rb") as f:
+            file_bytes = f.read()
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            risposta = await client.post(
+                self._endpoint,
+                params={
+                    "api_key": self._api_key,
+                    "confidence": int(self._confidence_min * 100),
+                    "overlap": int(self._iou_min * 100),
+                    "format": "json",
+                },
+                files={"file": (percorso_frame_raddrizzato.name, file_bytes, "image/jpeg")},
+            )
+
+        if risposta.status_code != 200:
+            raise ClientCVError(
+                f"Roboflow API HTTP {risposta.status_code}: "
+                f"{risposta.text[:500]}"
+            )
+
+        try:
+            dati = risposta.json()
+        except ValueError as e:
+            raise ClientCVError(
+                f"Roboflow API: risposta non JSON ({e}): {risposta.text[:200]}"
+            ) from e
+
+        predictions = dati.get("predictions", [])
+        if not isinstance(predictions, list):
+            raise ClientCVError(
+                f"Roboflow API: 'predictions' non e' una lista: {type(predictions)}"
+            )
+
+        detection: list[DetectionCV] = []
+        for pred in predictions:
+            if not isinstance(pred, dict):
+                continue
+            try:
+                # Roboflow ritorna centro (x, y) e dimensioni (width, height)
+                cx = float(pred["x"])
+                cy = float(pred["y"])
+                w = float(pred["width"])
+                h = float(pred["height"])
+                # Converti a top-left
+                bbox_x = max(0, int(cx - w / 2))
+                bbox_y = max(0, int(cy - h / 2))
+                bbox = (bbox_x, bbox_y, int(w), int(h))
+
+                conf = float(pred.get("confidence", 0.0))
+                classe_str = str(pred.get("class", ""))
+            except (KeyError, ValueError, TypeError):
+                # prediction malformata, skip
+                continue
+
+            colore, tipo, n_armate = self._parsa_classe(classe_str)
+
+            detection.append(DetectionCV(
+                territorio=None,  # mapping bbox→territorio fatto downstream
+                colore=colore,
+                tipo_pedina_dominante=tipo,
+                n_armate_stimate=n_armate,
+                bbox=bbox,
+                confidence=conf,
+                scomposizione=[{
+                    "classe_roboflow": classe_str,
+                    "bbox": list(bbox),
+                    "confidence": conf,
+                }],
+            ))
+
+        return detection
+
+
+# Tipi pedine canoniche (usati anche dal mock)
+_TIPI_PEDINE_NOTI: set[str] = {"carro_piccolo", "carro_medio", "carro_grande"}
+
+
+def _parsa_classe_default(
+    classe: str,
+) -> tuple[str | None, TipoPedinaCv | None, int]:
+    """
+    Parser default per la stringa `class` di Roboflow.
+
+    Convenzione raccomandata:
+        `<colore>_<tipo_pedina>_<n_armate>`
+
+    Esempi:
+        "rosso_carro_piccolo_3"  → ("rosso", "carro_piccolo", 3)
+        "blu_carro_grande_2"     → ("blu", "carro_grande", 2)
+        "verde_carro_medio_1"    → ("verde", "carro_medio", 1)
+
+    Se la classe non rispetta la convenzione, ritorna `(None, None, 0)`.
+    Per casi piu' complessi, passa una `parsa_classe` custom al
+    costruttore di `ClientCVRoboflow`.
+    """
+    parti = classe.strip().lower().split("_")
+    if len(parti) < 3:
+        return (None, None, 0)
+
+    colore = parti[0] if parti[0] else None
+    tipo_str = "_".join(parti[1:-1])
+    if tipo_str not in _TIPI_PEDINE_NOTI:
+        return (colore, None, 0)
+    tipo = cast("TipoPedinaCv", tipo_str)
+
+    try:
+        n_armate = int(parti[-1])
+    except ValueError:
+        n_armate = 0
+
+    return (colore, tipo, n_armate)
 
 
 def _estrai_versione_da_endpoint(endpoint: str) -> str:

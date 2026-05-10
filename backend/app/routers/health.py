@@ -56,3 +56,14 @@ def version() -> RispostaVersion:
         python=f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
         fastapi=fastapi_mod.__version__,
     )
+
+
+@router.get("/scheduler")
+def scheduler() -> dict[str, object]:
+    """
+    Stato dello scheduler in-process per il cleanup bundle vecchi.
+    Utile per verificare via curl/UI che lo scheduler stia funzionando.
+    """
+    from app.utili.scheduler import stato_scheduler
+
+    return stato_scheduler()

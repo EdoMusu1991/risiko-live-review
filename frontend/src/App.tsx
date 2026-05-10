@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { Layout } from "@/componenti/Layout";
+import { PaginaBundleInAttesa } from "@/pagine/PaginaBundleInAttesa";
 import { PaginaClassificaClub } from "@/pagine/PaginaClassificaClub";
 import { PaginaDettaglioPartita } from "@/pagine/PaginaDettaglioPartita";
 import { PaginaListaPartite } from "@/pagine/PaginaListaPartite";
@@ -13,6 +14,7 @@ export function App() {
         <Route element={<Layout />}>
           <Route index element={<PaginaListaPartite />} />
           <Route path="/partite/nuova" element={<PaginaNuovaPartita />} />
+          <Route path="/bundle" element={<PaginaBundleInAttesa />} />
           <Route
             path="/partite/:partitaId"
             element={<PaginaDettaglioPartita />}

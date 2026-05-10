@@ -14,6 +14,7 @@ dependencies = [
     "python-multipart>=0.0.9",  # upload file
     "aiofiles>=23.2.0",  # I/O file async per upload/download video
     "uvicorn[standard]>=0.30.0",
+    "apscheduler>=3.10.0",  # scheduler in-process per cleanup automatico bundle
 ]
 
 [project.optional-dependencies]

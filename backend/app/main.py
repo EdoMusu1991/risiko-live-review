@@ -30,6 +30,7 @@ from app.routers import (
     import_bundle_mobile,
     inferenze_cv,
     partite,
+    promozione_bundle,
     raddrizzamento,
     ricostruzione,
     risorse,
@@ -38,6 +39,7 @@ from app.routers import (
     video,
 )
 from app.utili.logging_setup import configura_logging
+from app.utili.scheduler import avvia_scheduler, ferma_scheduler
 
 
 @asynccontextmanager
@@ -64,8 +66,13 @@ async def ciclo_vita(_: FastAPI) -> AsyncIterator[None]:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
+    # Avvia scheduler in-process per cleanup automatico bundle vecchi.
+    # Disattivato di default (vedi configurazione/impostazioni.py).
+    avvia_scheduler()
+
     yield
 
+    ferma_scheduler()
     await engine.dispose()
 
 
@@ -100,6 +107,10 @@ app.add_middleware(RequestIdMiddleware)
 registra_exception_handlers(app)
 
 # Registrazione router
+# IMPORTANTE: promozione_bundle deve essere registrato PRIMA di partite
+# perche' espone /partite/bundle-disponibili che altrimenti verrebbe
+# catturato da /partite/{id_partita} di partite.router.
+app.include_router(promozione_bundle.router, prefix=impostazioni.api_prefix)
 app.include_router(partite.router, prefix=impostazioni.api_prefix)
 app.include_router(eventi.router, prefix=impostazioni.api_prefix)
 app.include_router(video.router, prefix=impostazioni.api_prefix)

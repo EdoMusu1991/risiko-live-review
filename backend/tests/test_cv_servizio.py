@@ -300,16 +300,118 @@ def test_roboflow_versione_esplicita_priorita() -> None:
 
 
 @pytest.mark.asyncio
-async def test_roboflow_inferisci_e_placeholder(tmp_path: Path) -> None:
-    """Finche' il modello non e' addestrato, deve sollevare NotImplementedError."""
-    c = ClientCVRoboflow(
+async def test_roboflow_inferisci_chiama_api_e_parsa_predictions(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """
+    Test del flusso reale: ClientCVRoboflow chiama l'endpoint Roboflow,
+    parsa le predictions e ritorna DetectionCV con classe convertita.
+    """
+    import httpx
+
+    risposta_mock = {
+        "predictions": [
+            {
+                "x": 410, "y": 280, "width": 80, "height": 80,
+                "confidence": 0.92, "class": "rosso_carro_piccolo_3",
+            },
+            {
+                "x": 800, "y": 600, "width": 60, "height": 60,
+                "confidence": 0.78, "class": "blu_carro_grande_2",
+            },
+            # Detection con classe non parsabile: deve essere comunque tornata
+            # ma con campi semantici None/0
+            {
+                "x": 100, "y": 100, "width": 30, "height": 30,
+                "confidence": 0.6, "class": "non_riconoscibile",
+            },
+        ],
+        "image": {"width": 1920, "height": 1080},
+    }
+
+    async def fake_post(self, url, **kwargs):  # noqa: ANN001
+        request = httpx.Request("POST", url)
+        return httpx.Response(200, json=risposta_mock, request=request)
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
+
+    client = ClientCVRoboflow(
         api_key="key",
         project_endpoint="https://detect.roboflow.com/risiko/1",
     )
     frame = tmp_path / "f.jpg"
+    frame.write_bytes(b"\xff\xd8\xff" + b"x" * 100)  # finto JPEG header
+
+    detections = await client.inferisci(frame)
+    assert len(detections) == 3
+
+    # Prima detection: rosso, carro_piccolo, 3 armate
+    d1 = detections[0]
+    assert d1.colore == "rosso"
+    assert d1.tipo_pedina_dominante == "carro_piccolo"
+    assert d1.n_armate_stimate == 3
+    assert d1.confidence == 0.92
+    # bbox: centro (410, 280) → top-left (370, 240), width=80, height=80
+    assert d1.bbox == (370, 240, 80, 80)
+    assert d1.territorio is None  # mappato downstream
+
+    # Seconda detection: blu, carro_grande, 2
+    d2 = detections[1]
+    assert d2.colore == "blu"
+    assert d2.tipo_pedina_dominante == "carro_grande"
+    assert d2.n_armate_stimate == 2
+
+    # Terza detection: classe sconosciuta → campi semantici None
+    d3 = detections[2]
+    assert d3.colore is None
+    assert d3.tipo_pedina_dominante is None
+    assert d3.n_armate_stimate == 0
+    assert d3.confidence == 0.6  # bbox e confidence si
+
+
+@pytest.mark.asyncio
+async def test_roboflow_inferisci_solleva_su_404(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Roboflow API ritorna 404 (endpoint sbagliato) → ClientCVError."""
+    import httpx
+
+    async def fake_post(self, url, **kwargs):  # noqa: ANN001
+        request = httpx.Request("POST", url)
+        return httpx.Response(404, text="Project not found", request=request)
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
+
+    client = ClientCVRoboflow(api_key="k", project_endpoint="https://example/x/1")
+    frame = tmp_path / "f.jpg"
     frame.write_bytes(b"x")
-    with pytest.raises(NotImplementedError):
-        await c.inferisci(frame)
+
+    from app.servizi.cv_servizio import ClientCVError
+
+    with pytest.raises(ClientCVError, match="HTTP 404"):
+        await client.inferisci(frame)
+
+
+def test_parsa_classe_default_casi_limite() -> None:
+    """Validazione del parser default per la convenzione classe Roboflow."""
+    from app.servizi.cv_servizio import _parsa_classe_default
+
+    # Convenzione standard
+    assert _parsa_classe_default("rosso_carro_piccolo_3") == ("rosso", "carro_piccolo", 3)
+    assert _parsa_classe_default("blu_carro_grande_2") == ("blu", "carro_grande", 2)
+    assert _parsa_classe_default("verde_carro_medio_1") == ("verde", "carro_medio", 1)
+
+    # Tipo sconosciuto
+    assert _parsa_classe_default("rosso_qualcosa_3") == ("rosso", None, 0)
+
+    # Numero non parsabile
+    assert _parsa_classe_default("rosso_carro_piccolo_xyz") == ("rosso", "carro_piccolo", 0)
+
+    # Troppo poche parti
+    assert _parsa_classe_default("invalido") == (None, None, 0)
+    assert _parsa_classe_default("") == (None, None, 0)
+    assert _parsa_classe_default("rosso") == (None, None, 0)
 
 
 # === DetectionCV ===

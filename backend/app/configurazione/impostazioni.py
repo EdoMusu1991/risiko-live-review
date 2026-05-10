@@ -58,6 +58,36 @@ class Impostazioni(BaseSettings):
     #: Dimensione massima upload video (default 10 GB).
     upload_max_size_mb: int = 10240
 
+    # === Scheduler / Cleanup automatico ===
+
+    #: Abilita lo scheduler in-process per il cleanup automatico bundle vecchi.
+    #: In produzione (Railway) raccomandato True. In test/dev rimane False
+    #: per evitare side-effects nelle suite pytest.
+    scheduler_abilitato: bool = False
+
+    #: Giorni dopo i quali un bundle non promosso viene cancellato automaticamente.
+    bundle_cleanup_giorni: int = 30
+
+    #: Ora del giorno (HH:MM, fuso server) per il cleanup. Default "03:00".
+    bundle_cleanup_ora: str = "03:00"
+
+    # === CV / Roboflow ===
+
+    #: API key Roboflow. Se vuota, il backend usa `ClientCVMock` invece
+    #: del client reale Roboflow (utile per dev/test).
+    roboflow_api_key: str = ""
+
+    #: Endpoint completo del modello Roboflow allenato. Esempio:
+    #: `https://detect.roboflow.com/risiko-plancia/3` (project_id=risiko-plancia,
+    #: version=3). Lasciare vuoto per usare il mock.
+    roboflow_endpoint: str = ""
+
+    #: Confidence minima sotto la quale Roboflow filtra le detection.
+    roboflow_confidence_min: float = 0.5
+
+    #: IoU threshold per NMS dedup di Roboflow.
+    roboflow_iou_min: float = 0.5
+
     # === API ===
 
     #: Origin CORS consentite (frontend dev server).

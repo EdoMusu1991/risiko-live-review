@@ -32,6 +32,13 @@ export type {
   GiocatoreClub,
 } from "./classificaClub";
 export { apiInferenzeCV } from "./inferenzeCV";
+export { apiPromozioneBundle } from "./promozioneBundle";
+export type {
+  BundleDisponibile,
+  RichiestaPromozioneBundle,
+  RispostaListaBundle,
+  RispostaPromozioneBundle,
+} from "./promozioneBundle";
 export type {
   AggiornamentoBulkDivergenze,
   DivergenzaInferita,
@@ -45,7 +52,8 @@ export type {
   StatisticheDiscrepanze,
   SuggerimentoEvento,
 } from "./inferenzeCV";
-export { apiDiagnostica } from "./diagnostica";
+export { apiDiagnostica, apiScheduler } from "./diagnostica";
+export type { StatoScheduler } from "./diagnostica";
 export type {
   StatoComponente,
   StatoPipelineCv,
