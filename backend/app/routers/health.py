@@ -67,3 +67,27 @@ def scheduler() -> dict[str, object]:
     from app.utili.scheduler import stato_scheduler
 
     return stato_scheduler()
+
+
+@router.post("/scheduler/run-now")
+def scheduler_run_now() -> dict[str, object]:
+    """
+    Esegue subito il job di cleanup bundle vecchi, senza aspettare il
+    trigger schedulato. Utile per testare manualmente la configurazione,
+    o per liberare spazio on-demand.
+
+    Funziona anche se `SCHEDULER_ABILITATO=false`: il job e' una funzione
+    pura, lo scheduler ne controlla solo lo schedule.
+
+    Ritorna `{n_cancellati, ids_cancellati[]}` come l'endpoint batch
+    `DELETE /api/partite/bundle`.
+    """
+    from app.configurazione import impostazioni
+    from app.servizi.promozione_bundle_servizio import cancella_bundle_vecchi
+
+    risultato = cancella_bundle_vecchi(impostazioni.bundle_cleanup_giorni)
+    return {
+        "n_cancellati": risultato["n_cancellati"],
+        "ids_cancellati": risultato["ids_cancellati"],
+        "giorni_soglia": impostazioni.bundle_cleanup_giorni,
+    }

@@ -21,6 +21,7 @@ from app.middleware.request_id import RequestIdMiddleware
 from app.routers import (
     aggregazione,
     classifica_club,
+    dashboard,
     diagnostica,
     esportazione,
     eventi,
@@ -125,6 +126,7 @@ app.include_router(validazione.router, prefix=impostazioni.api_prefix)
 app.include_router(classifica_club.router, prefix=impostazioni.api_prefix)
 app.include_router(frame.router, prefix=impostazioni.api_prefix)
 app.include_router(raddrizzamento.router, prefix=impostazioni.api_prefix)
+app.include_router(dashboard.router, prefix=impostazioni.api_prefix)
 app.include_router(inferenze_cv.router, prefix=impostazioni.api_prefix)
 app.include_router(diagnostica.router, prefix=impostazioni.api_prefix)
 app.include_router(health.router, prefix=impostazioni.api_prefix)

@@ -48,6 +48,7 @@ function Header() {
           <VoceMenu to="/partite/nuova">Nuova partita</VoceMenu>
           <VoceMenu to="/bundle">Bundle</VoceMenu>
           <VoceMenu to="/club">Classifica club</VoceMenu>
+          <VoceMenu to="/dashboard">Dashboard</VoceMenu>
         </nav>
       </div>
     </header>

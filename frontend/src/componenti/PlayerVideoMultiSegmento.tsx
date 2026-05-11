@@ -73,6 +73,13 @@ export const PlayerVideoMultiSegmento = forwardRef<
   ProprietaPlayer
 >(function PlayerVideoMultiSegmento({ segmenti, onSecondoCambia }, ref) {
   const elementoVideo = useRef<HTMLVideoElement | null>(null);
+  /**
+   * Pre-cacher: secondo <video> invisibile con `preload="auto"` puntato al
+   * segmento N+1. Quando il segmento corrente finisce, il browser ha gia'
+   * scaricato i primi MB del prossimo → switch quasi istantaneo invece
+   * della pausa di 200-300ms tipica.
+   */
+  const elementoPrecache = useRef<HTMLVideoElement | null>(null);
   const [indiceCorrente, setIndiceCorrente] = useState(0);
   const [secondoLocale, setSecondoLocale] = useState(0);
   const [inRiproduzione, setInRiproduzione] = useState(false);
@@ -253,6 +260,21 @@ export const PlayerVideoMultiSegmento = forwardRef<
           playsInline
           muted={muto}
         />
+        {/*
+          Pre-cacher invisibile: punta al segmento N+1 e usa preload="auto"
+          per scaricare i primi MB in background mentre il segmento N gira.
+          Risultato: lo switch a fine segmento e' praticamente istantaneo.
+        */}
+        {indiceCorrente + 1 < segmenti.length ? (
+          <video
+            ref={elementoPrecache}
+            src={segmenti[indiceCorrente + 1]?.urlStream}
+            preload="auto"
+            muted
+            style={{ display: "none" }}
+            aria-hidden="true"
+          />
+        ) : null}
       </div>
 
       {/* Timeline */}

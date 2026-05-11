@@ -155,3 +155,33 @@ async def test_get_scheduler_endpoint(client_test: AsyncClient) -> None:
     assert "abilitato" in body
     assert "in_esecuzione" in body
     assert "giorni_cleanup" in body
+
+
+# ============================================================================
+# Endpoint POST /api/scheduler/run-now
+# ============================================================================
+
+
+async def test_post_scheduler_run_now_cancella_bundle_vecchi(
+    client_test: AsyncClient,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`run-now` esegue immediatamente il cleanup, anche se scheduler off."""
+    monkeypatch.setattr(impostazioni, "storage_partite_path", tmp_path)
+    monkeypatch.setattr(impostazioni, "bundle_cleanup_giorni", 30)
+
+    # bundle vecchio (cancellabile) + bundle nuovo (no)
+    _crea_bundle_vecchio(tmp_path, "vecchio", "2025-05-12T20:00:00+00:00")
+    _crea_bundle_vecchio(tmp_path, "nuovo", "2099-01-01T00:00:00+00:00")
+
+    r = await client_test.post("/api/scheduler/run-now")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["n_cancellati"] == 1
+    assert body["ids_cancellati"] == ["vecchio"]
+    assert body["giorni_soglia"] == 30
+
+    # filesystem coerente
+    assert not (tmp_path / "vecchio").exists()
+    assert (tmp_path / "nuovo").exists()

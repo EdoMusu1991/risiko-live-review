@@ -70,3 +70,11 @@ export type {
   SetupAutomaticoRisposta,
 } from "./setupAutomatico";
 export { ErroreApi } from "./cliente";
+export { apiDashboard } from "./dashboard";
+export type {
+  SommarioDashboard,
+  StatistichePartite as StatistichePartiteDashboard,
+  StatisticheBundle,
+  StatisticheSpazio,
+  StatoServizi,
+} from "./dashboard";
